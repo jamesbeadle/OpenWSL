@@ -1,0 +1,26 @@
+{
+  "canisters": {
+    "OpenWSL_backend": {
+      "dependencies": [],
+      "main": "src/OpenWSL_backend/main.mo",
+      "type": "motoko",
+      "optimize": "cycles"
+    },
+    "OpenWSL_frontend": {
+      "dependencies": ["OpenWSL_backend"],
+      "frontend": {
+        "entrypoint": "build/index.html"
+      },
+      "source": ["build/"],
+      "type": "assets"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": "mops sources"
+    }
+  },
+  "output_env_file": ".env",
+  "version": 2
+}
