@@ -5,7 +5,6 @@
   import { clubStore } from "$lib/stores/club-store";
   import { fixtureStore } from "$lib/stores/fixture-store";
   import { systemStore } from "$lib/stores/system-store";
-  import { toastsError } from "$lib/stores/toasts-store";
   import {
     calculateAgeFromNanoseconds,
     convertDateToReadable,
@@ -86,10 +85,6 @@
       countdownHours = countdownTime.hours.toString();
       countdownMinutes = countdownTime.minutes.toString();
     } catch (error) {
-      toastsError({
-        msg: { text: "Error fetching player details." },
-        err: error,
-      });
       console.error("Error fetching data:", error);
     } finally {
       isLoading = false;
@@ -139,14 +134,6 @@
           <p class="content-panel-header">
             Shirt: {selectedPlayer?.shirtNumber}
           </p>
-        </div>
-        <div class="vertical-divider" />
-        <div class="flex-grow">
-          <p class="content-panel-header">{team?.name}</p>
-          <p class="content-panel-stat">
-            {selectedPlayer?.totalPoints}
-          </p>
-          <p class="content-panel-header">Total Points</p>
         </div>
         <div class="vertical-divider" />
         <div class="flex-grow">

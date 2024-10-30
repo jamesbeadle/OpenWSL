@@ -4,7 +4,6 @@
   import { fixtureStore } from "$lib/stores/fixture-store";
   import { playerStore } from "$lib/stores/player-store";
   import { systemStore } from "$lib/stores/system-store";
-  import { toastsError } from "$lib/stores/toasts-store";
   import Layout from "../Layout.svelte";
   import BadgeIcon from "$lib/icons/BadgeIcon.svelte";
   import { page } from "$app/stores";
@@ -22,10 +21,10 @@
     getPositionText,
     convertPlayerPosition,
   } from "../../lib/utils/helpers";
-  import { Spinner } from "@dfinity/gix-components";
     import LoanedPlayers from "$lib/components/club/loaned-players.svelte";
     import { seasonStore } from "$lib/stores/season-store";
     import { storeManager } from "$lib/managers/store-manager";
+    import LocalSpinner from "$lib/components/local-spinner.svelte";
 
   let isLoading = true;
   let fixturesWithTeams: FixtureWithTeams[] = [];
@@ -75,10 +74,6 @@
       nextFixtureHomeTeam = getTeamFromId(nextFixture?.homeClubId ?? 0) ?? null;
       nextFixtureAwayTeam = getTeamFromId(nextFixture?.awayClubId ?? 0) ?? null;
     } catch (error) {
-      toastsError({
-        msg: { text: "Error fetching club details." },
-        err: error,
-      });
       console.error("Error fetching club details:", error);
     } finally {
       isLoading = false;
@@ -118,7 +113,7 @@
 
 <Layout>
   {#if isLoading}
-    <Spinner />
+    <LocalSpinner />
   {:else}
     <div class="page-header-wrapper flex">
       <div class="content-panel">
@@ -224,31 +219,6 @@
             {getTeamPoints(id)}
           </p>
           <p class="content-panel-header">Total</p>
-        </div>
-
-        <div class="vertical-divider" />
-        <div class="flex-grow">
-          <p class="content-panel-header">Most Points</p>
-          {#if highestScoringPlayer?.totalPoints == 0}
-            <p class="content-panel-stat">-</p>
-            <p class="content-panel-header">
-              - ({highestScoringPlayer?.totalPoints})
-            </p>
-          {:else}
-            <p class="content-panel-stat">
-              <a href={`/player?id=${highestScoringPlayer?.id}`}
-                >{highestScoringPlayer?.lastName}</a
-              >
-            </p>
-            <p class="content-panel-header">
-              {getPositionText(
-                convertPlayerPosition(
-                  highestScoringPlayer?.position ?? { Goalkeeper: null }
-                )
-              )}
-              ({highestScoringPlayer?.totalPoints})
-            </p>
-          {/if}
         </div>
       </div>
     </div>

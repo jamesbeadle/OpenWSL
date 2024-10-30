@@ -1,9 +1,9 @@
 <script lang="ts">
   import BadgeIcon from "$lib/icons/BadgeIcon.svelte";
   import type { GameweekData } from "$lib/interfaces/GameweekData";
-  import { Modal } from "@dfinity/gix-components";
   import type { ClubDTO } from "../../../../declarations/OpenWSL_backend/OpenWSL_backend.did";
   import { convertPlayerPosition, getFlagComponent } from "../utils/helpers";
+  import Modal from "./modal.svelte";
 
   export let visible: boolean;
   export let closeDetailModal: () => void;
@@ -13,7 +13,7 @@
   export let seasonName: string;
 </script>
 
-<Modal {visible} on:nnsClose={closeDetailModal}>
+<Modal {visible} on:close={closeDetailModal}>
   <div class="mx-4 p-4">
     <div class="flex justify-between items-center my-2">
       <h3 class="default-header">Player Detail</h3>

@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { toastsError } from "$lib/stores/toasts-store";
   import { clubStore } from "$lib/stores/club-store";
   import { systemStore } from "$lib/stores/system-store";
   import { authSignedInStore } from "$lib/derived/auth.derived";
@@ -11,7 +10,6 @@
   import ViewDetailsIcon from "$lib/icons/ViewDetailsIcon.svelte";
     import LocalSpinner from "./local-spinner.svelte";
     import { storeManager } from "$lib/managers/store-manager";
-    import { page } from "$app/stores";
 
   let isLoading = true;
   let gameweeks = Array.from(
@@ -72,14 +70,10 @@
         selectedSeasonId,
         selectedGameweek,
         currentPage,
-        25
+        0
       );
       leaderboard = leaderboardData;
     } catch (error) {
-      toastsError({
-        msg: { text: "Error fetching leaderboard data." },
-        err: error,
-      });
       console.error("Error fetching leaderboard data:", error);
     } finally {
       isLoading = false;
@@ -110,13 +104,14 @@
 
     isLoading = true;
     try {
+      //TODO
       switch (selectedLeaderboardType) {
         case 1:
           leaderboard = await weeklyLeaderboardStore.getWeeklyLeaderboard(
             selectedSeasonId,
             selectedGameweek,
             currentPage,
-            25
+            0
           );
           break;
         case 2:
@@ -137,10 +132,6 @@
           break;
       }
     } catch (error) {
-      toastsError({
-        msg: { text: "Error fetching leaderboard data." },
-        err: error,
-      });
       console.error("Error fetching leaderboard data:", error);
     } finally {
       isLoading = false;

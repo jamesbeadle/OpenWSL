@@ -1,6 +1,5 @@
 <script lang="ts">
   import BadgeIcon from "$lib/icons/BadgeIcon.svelte";
-  import { Modal } from "@dfinity/gix-components";
   import type {
     ClubDTO,
     PlayerDetailDTO,

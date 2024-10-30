@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { toastsError } from "$lib/stores/toasts-store";
   import {
     convertPlayerPosition,
     getPositionText,
@@ -31,10 +30,6 @@
           loanedPlayers = await playerStore.getLoanedPlayers(clubId);
       }
     } catch (error) {
-      toastsError({
-        msg: { text: "Error fetching loaned players." },
-        err: error,
-      });
       console.error("Error fetching loaned players:", error);
     } finally {
     }

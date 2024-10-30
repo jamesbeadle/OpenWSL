@@ -5,7 +5,6 @@
   import { systemStore } from "$lib/stores/system-store";
   import { clubStore } from "$lib/stores/club-store";
   import { managerStore } from "$lib/stores/manager-store";
-  import { toastsError } from "$lib/stores/toasts-store";
   import type {
     FantasyTeamSnapshot,
     ClubDTO,
@@ -64,10 +63,6 @@
       viewGameweekDetail($selectedGameweek!);
       */
     } catch (error) {
-      toastsError({
-        msg: { text: "Error fetching manager details." },
-        err: error,
-      });
       console.error("Error fetching manager details:", error);
     } finally {
       isLoading = false;

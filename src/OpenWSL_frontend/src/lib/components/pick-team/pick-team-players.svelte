@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { writable, type Writable } from "svelte/store";
-  import { toastsError } from "$lib/stores/toasts-store";
   import { systemStore } from "$lib/stores/system-store";
   import { clubStore } from "$lib/stores/club-store";
   import { playerStore } from "$lib/stores/player-store";
@@ -71,10 +70,6 @@
 
       await loadData();
     } catch (error) {
-      toastsError({
-        msg: { text: "Error fetching team details." },
-        err: error,
-      });
       console.error("Error fetching team details:", error);
     } 
   });

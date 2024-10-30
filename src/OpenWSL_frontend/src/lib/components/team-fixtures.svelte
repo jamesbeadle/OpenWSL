@@ -2,7 +2,6 @@
   import { onMount } from "svelte";
   import { clubStore } from "$lib/stores/club-store";
   import { systemStore } from "$lib/stores/system-store";
-  import { toastsError } from "$lib/stores/toasts-store";
   import { fixtureStore } from "$lib/stores/fixture-store";
   import BadgeIcon from "$lib/icons/BadgeIcon.svelte";
   import {
@@ -52,10 +51,6 @@
         awayTeam: getTeamFromId(fixture.awayClubId),
       }));
     } catch (error) {
-      toastsError({
-        msg: { text: "Error fetching team fixtures." },
-        err: error,
-      });
       console.error("Error fetching team fixtures:", error);
     } finally {
     }

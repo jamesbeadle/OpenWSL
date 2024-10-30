@@ -1,7 +1,6 @@
 <script lang="ts">
   import { userStore } from "$lib/stores/user-store";
-  import { toastsError, toastsShow } from "$lib/stores/toasts-store";
-  import { Modal, busyStore } from "@dfinity/gix-components";
+    import Modal from "../modal.svelte";
 
   export let visible: boolean;
   export let closeModal: () => void;
@@ -55,29 +54,14 @@
     : "";
 
   async function withdrawFPL() {
-    busyStore.startBusy({
-      initiator: "withdraw-fpl",
-      text: "Withdrawing FPL...",
-    });
     try {
       const amountInE8s = convertToE8s(withdrawalInputAmount);
       await userStore.withdrawFPL(withdrawalAddress, amountInE8s);
-      toastsShow({
-        text: "FPL successfully withdrawn.",
-        level: "success",
-        duration: 2000,
-      });
-      busyStore.stopBusy("withdraw-fpl");
       await closeModal();
     } catch (error) {
-      toastsError({
-        msg: { text: "Error withdrawing FPL." },
-        err: error,
-      });
       console.error("Error withdrawing FPL:", error);
       cancelModal();
     } finally {
-      busyStore.stopBusy("withdraw-fpl");
     }
   }
 </script>

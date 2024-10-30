@@ -4,7 +4,6 @@
   import { systemStore } from "$lib/stores/system-store";
   import { fixtureStore } from "$lib/stores/fixture-store";
   import { clubStore } from "$lib/stores/club-store";
-  import { toastsError } from "$lib/stores/toasts-store";
   import { managerStore } from "$lib/stores/manager-store";
   import {
     formatUnixDateToReadable,
@@ -62,10 +61,6 @@
       loadSection3();
       
     } catch (error) {
-      toastsError({
-        msg: { text: "Error fetching homepage data." },
-        err: error,
-      });
       console.error("Error fetching homepage data:", error);
     } finally {
       isLoading = false;

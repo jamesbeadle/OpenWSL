@@ -2,19 +2,18 @@
   import { onMount } from "svelte";
   import Layout from "../Layout.svelte";
   import { writable } from "svelte/store";
-  import { toastsError } from "$lib/stores/toasts-store";
   import { managerStore } from "$lib/stores/manager-store";
   import PickTeamHeader from "$lib/components/pick-team/pick-team-header.svelte";
   import PickTeamButtons from "$lib/components/pick-team/pick-team-buttons.svelte";
   import PickTeamPlayers from "$lib/components/pick-team/pick-team-players.svelte";
   import BonusPanel from "$lib/components/pick-team/bonus-panel.svelte";
   import SimpleFixtures from "$lib/components/simple-fixtures.svelte";
-  import { Spinner } from "@dfinity/gix-components";
   import type { PickTeamDTO } from "../../../../declarations/OpenWSL_backend/OpenWSL_backend.did";
   import { allFormations } from "$lib/utils/pick-team.helpers";
     import { systemStore } from "$lib/stores/system-store";
     import OnHold from "$lib/components/pick-team/on-hold.svelte";
     import { storeManager } from "$lib/managers/store-manager";
+    import LocalSpinner from "$lib/components/local-spinner.svelte";
 
   let availableFormations = writable<string[]>([]);
   let selectedFormation = writable<string>('4-4-2');
@@ -70,10 +69,6 @@
       
       await loadData();
     } catch (error) {
-      toastsError({
-        msg: { text: "Error fetching team details." },
-        err: error,
-      });
       console.error("Error fetching team details:", error);
     } finally {
       isLoading = false;
@@ -123,7 +118,7 @@
 
 <Layout>
   {#if isLoading}
-    <Spinner />
+    <LocalSpinner />
   {:else}
     <div>
       {#if $systemStore?.onHold}

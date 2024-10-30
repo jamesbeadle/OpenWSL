@@ -79,9 +79,6 @@
           <div class="hidden sm:flex items-center w-2/12">
             £{(player.valueQuarterMillions / 4).toFixed(2)}m
           </div>
-          <div class="hidden lg:flex items-center w-1/12">
-            {player.totalPoints}
-          </div>
           <div class="flex w-2/12 justify-center xl:justify-start xl:w-1/12">
             <ViewDetailsIcon className="w-4 sm:w-5 md:w-6 xl:w-7" />
           </div>

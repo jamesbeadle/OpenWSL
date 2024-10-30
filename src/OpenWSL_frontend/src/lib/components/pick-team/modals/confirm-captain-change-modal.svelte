@@ -1,13 +1,13 @@
 <script lang="ts">
+  import Modal from "$lib/components/modal.svelte";
   import ActiveCaptainIcon from "$lib/icons/ActiveCaptainIcon.svelte";
-  import { Modal } from "@dfinity/gix-components";
   export let visible = false;
   export let onConfirm: () => void;
   export let onClose: () => void;
   export let newCaptain = "";
 </script>
 
-<Modal {visible} on:nnsClose={onClose}>
+<Modal {visible} on:close={onClose}>
   <div class="p-4">
     <div class="flex justify-between items-center my-2">
       <h4 class="flex items-center">

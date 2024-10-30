@@ -3,7 +3,6 @@
   import { page } from "$app/stores";
   import { playerStore } from "$lib/stores/player-store";
   import { managerStore } from "$lib/stores/manager-store";
-  import { toastsError } from "$lib/stores/toasts-store";
   import type {
     FantasyTeamSnapshot,
     ManagerDTO,
@@ -32,10 +31,6 @@
 
       manager = await managerStore.getPublicProfile(principalId);
     } catch (error) {
-      toastsError({
-        msg: { text: "Error fetching manager gameweeks." },
-        err: error,
-      });
       console.error("Error fetching manager gameweeks:", error);
     } finally {
       isLoading = false;

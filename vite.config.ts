@@ -59,12 +59,7 @@ const config: UserConfig = {
   },
   css: {
     preprocessorOptions: {
-      scss: {
-        additionalData: `
-          @use "./node_modules/@dfinity/gix-components/dist/styles/mixins/media";
-          @use "./node_modules/@dfinity/gix-components/dist/styles/mixins/text";
-        `,
-      },
+      scss: {},
     },
   },
   build: {
@@ -77,8 +72,8 @@ const config: UserConfig = {
           const lazy = ["@dfinity/nns"];
 
           if (
-            ["@sveltejs", "svelte", "@dfinity/gix-components", ...lazy].find(
-              (lib) => folder.includes(lib),
+            ["@sveltejs", "svelte", ...lazy].find((lib) =>
+              folder.includes(lib),
             ) === undefined &&
             folder.includes("node_modules")
           ) {

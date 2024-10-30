@@ -2,7 +2,6 @@
   import { onMount } from "svelte";
   import { writable, type Writable } from "svelte/store";
   import { systemStore } from "$lib/stores/system-store";
-  import { toastsError } from "$lib/stores/toasts-store";
   import { clubStore } from "$lib/stores/club-store";
   import { fixtureStore } from "$lib/stores/fixture-store";
   import { playerStore } from "$lib/stores/player-store";
@@ -62,10 +61,6 @@
       }
       updateGameweekPlayers();
     } catch (error) {
-      toastsError({
-        msg: { text: "Error fetching manager gameweek detail." },
-        err: error,
-      });
       console.error("Error fetching manager gameweek detail:", error);
     } finally {
       $loadingGameweek = false;
@@ -99,10 +94,6 @@
         })
       );
     } catch (error) {
-      toastsError({
-        msg: { text: "Error updating gameweek players." },
-        err: error,
-      });
       console.error("Error updating gameweek players:", error);
     } finally {
       isLoading = false;
@@ -141,10 +132,6 @@
       selectedOpponentTeam = $clubStore.find((x) => x.id === opponentId)!;
       showModal = true;
     } catch (error) {
-      toastsError({
-        msg: { text: "Error loading gameweek detail." },
-        err: error,
-      });
       console.error("Error loading gameweek detail:", error);
     }
   }

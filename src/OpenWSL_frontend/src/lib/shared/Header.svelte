@@ -1,7 +1,6 @@
 <script lang="ts">
   import { page } from "$app/stores";
-  import { authStore, type AuthSignInParams } from "$lib/stores/auth.store"
-  import { toastsError } from "$lib/stores/toasts-store";
+  import { authStore, type AuthSignInParams } from "$lib/stores/auth.store";
   import OpenFPLIcon from "$lib/icons/OpenFPLIcon.svelte";
   import WalletIcon from "$lib/icons/WalletIcon.svelte";
   import { onMount, onDestroy } from "svelte";
@@ -21,10 +20,6 @@
     try {
       await storeManager.syncStores();
     } catch (error) {
-      toastsError({
-        msg: { text: "Error syncing authentication." },
-        err: error,
-      });
       console.error("Error syncing authentication:", error);
     }
   });

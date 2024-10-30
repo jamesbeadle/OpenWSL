@@ -8,10 +8,10 @@
   import type { Bonus } from "$lib/types/bonus";
   import type { PickTeamDTO } from "../../../../../../declarations/OpenWSL_backend/OpenWSL_backend.did";
   import { BonusType } from "$lib/enums/BonusType";
-  import { Modal } from "@dfinity/gix-components";
   import { countryStore } from "$lib/stores/country-store";
-    import { convertPlayerPosition } from "$lib/utils/helpers";
-    import { storeManager } from "$lib/managers/store-manager";
+  import { convertPlayerPosition } from "$lib/utils/helpers";
+  import { storeManager } from "$lib/managers/store-manager";
+  import Modal from "$lib/components/modal.svelte";
     
   export let visible: boolean;
   export let fantasyTeam: Writable<PickTeamDTO | null>;
@@ -233,7 +233,7 @@
   })();
 </script>
 
-<Modal {visible} on:nnsClose={closeBonusModal}>
+<Modal {visible} on:close={closeBonusModal}>
   <div class="mx-4 p-4">
     <div class="flex justify-between items-center my-2">
       <h3 class="default-header">Use Bonus</h3>

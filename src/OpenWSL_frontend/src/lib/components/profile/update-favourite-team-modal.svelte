@@ -2,9 +2,8 @@
   import { onMount } from "svelte";
   import { userStore } from "$lib/stores/user-store";
   import { clubStore } from "$lib/stores/club-store";
-  import { toastsError, toastsShow } from "$lib/stores/toasts-store";
-  import { Modal, busyStore } from "@dfinity/gix-components";
   import { storeManager } from "$lib/managers/store-manager";
+    import Modal from "../modal.svelte";
 
   export let visible: boolean;
   export let closeModal: () => void;
@@ -20,34 +19,20 @@
   });
 
   async function updateFavouriteTeam() {
-    busyStore.startBusy({
-      initiator: "update-club",
-      text: "Updating favourite club...",
-    });
 
     try {
       await userStore.updateFavouriteTeam(newFavouriteTeam);
       await userStore.sync();
       await closeModal();
-      toastsShow({
-        text: "Favourite team updated.",
-        level: "success",
-        duration: 2000,
-      });
     } catch (error) {
-      toastsError({
-        msg: { text: "Error updating favourite team." },
-        err: error,
-      });
       console.error("Error updating favourite team:", error);
       cancelModal();
     } finally {
-      busyStore.stopBusy("update-club");
     }
   }
 </script>
 
-<Modal {visible} on:nnsClose={cancelModal}>
+<Modal {visible} on:close={cancelModal}>
   <div class="mx-4 p-4">
     <div class="flex justify-between items-center my-2">
       <h3 class="default-header">Update Favourite Team</h3>

@@ -1,7 +1,6 @@
 <script lang="ts">
   import { userStore } from "$lib/stores/user-store";
-  import { toastsError, toastsShow } from "$lib/stores/toasts-store";
-  import { Modal, busyStore } from "@dfinity/gix-components";
+    import Modal from "../modal.svelte";
 
   export let visible: boolean;
   export let closeModal: () => void;
@@ -23,33 +22,19 @@
   $: isSubmitDisabled = !isDisplayNameValid(newUsername);
 
   async function updateUsername() {
-    busyStore.startBusy({
-      initiator: "update-name",
-      text: "Updating username...",
-    });
     try {
       await userStore.updateUsername(newUsername);
       await userStore.sync();
       await closeModal();
-      toastsShow({
-        text: "Username updated.",
-        level: "success",
-        duration: 2000,
-      });
     } catch (error) {
-      toastsError({
-        msg: { text: "Error updating username." },
-        err: error,
-      });
       console.error("Error updating username:", error);
       cancelModal();
     } finally {
-      busyStore.stopBusy("update-name");
     }
   }
 </script>
 
-<Modal {visible} on:nnsClose={cancelModal}>
+<Modal {visible} on:close={cancelModal}>
   <div class="mx-4 p-4">
     <div class="flex justify-between items-center my-2">
       <h3 class="default-header">Update Username</h3>

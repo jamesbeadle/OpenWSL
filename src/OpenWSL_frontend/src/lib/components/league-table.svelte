@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { toastsError } from "$lib/stores/toasts-store";
   import { clubStore } from "$lib/stores/club-store";
   import { fixtureStore } from "$lib/stores/fixture-store";
   import { systemStore } from "$lib/stores/system-store";
@@ -30,10 +29,6 @@
         awayTeam: getTeamFromId(fixture.awayClubId),
       }));
     } catch (error) {
-      toastsError({
-        msg: { text: "Error fetching league table." },
-        err: error,
-      });
       console.error("Error fetching league table:", error);
     } finally {
     }

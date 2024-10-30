@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { type Writable } from "svelte/store";
-  import { toastsError } from "$lib/stores/toasts-store";
   import { systemStore } from "$lib/stores/system-store";
   import { fixtureStore } from "$lib/stores/fixture-store";
   import { playerStore } from "$lib/stores/player-store";
@@ -43,10 +42,6 @@
       updateTeamValue();
       setCountdownTimer();
     } catch (error) {
-      toastsError({
-        msg: { text: "Error fetching pick team header data." },
-        err: error,
-      });
       console.error("Error fetching pick team header data:", error);
     } finally {
       isLoading = false;

@@ -3,7 +3,6 @@
   import { clubStore } from "$lib/stores/club-store";
   import { fixtureStore } from "$lib/stores/fixture-store";
   import { systemStore } from "$lib/stores/system-store";
-  import { toastsError } from "$lib/stores/toasts-store";
   import BadgeIcon from "$lib/icons/BadgeIcon.svelte";
   import {
     formatUnixTimeToTime,
@@ -66,10 +65,6 @@
       }));
       
     } catch (error) {
-      toastsError({
-        msg: { text: "Error fetching fixtures data." },
-        err: error,
-      });
       console.error("Error fetching fixtures data:", error);
     }
   });

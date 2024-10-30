@@ -4,8 +4,6 @@
   import { systemStore } from "$lib/stores/system-store";
   import { playerStore } from "$lib/stores/player-store";
   import { managerStore } from "$lib/stores/manager-store";
-  import { busyStore } from "@dfinity/gix-components";
-  import { toastsError, toastsShow } from "$lib/stores/toasts-store";
   import type { PickTeamDTO } from "../../../../../declarations/OpenWSL_backend/OpenWSL_backend.did";
   import { allFormations, getAvailableFormations, getHighestValuedPlayerId, getTeamFormation } from "$lib/utils/pick-team.helpers";
   import { convertPlayerPosition } from "$lib/utils/helpers";
@@ -67,10 +65,6 @@
       loadData();
       disableInvalidFormations()
     } catch (error) {
-      toastsError({
-        msg: { text: "Error loading pick team buttons." },
-        err: error,
-      });
       console.error("Error loading pick team buttons:", error);
     } finally {
       isLoading = false;
@@ -318,11 +312,6 @@
       return;
     }
 
-    busyStore.startBusy({
-      initiator: "save-team",
-      text: "Saving fantasy team...",
-    });
-
     let team = $fantasyTeam;
     if (team?.captainId === 0 || !team?.playerIds.includes(team?.captainId)) {
       team!.captainId = getHighestValuedPlayerId(team!, $playerStore);
@@ -349,21 +338,9 @@
         bonusUsedInSession,
         transferWindowPlayedInSession
       );
-      busyStore.stopBusy("save-team");
-      toastsShow({
-        text: "Team saved successully!",
-        level: "success",
-        position: "bottom",
-        duration: 2000,
-      });
     } catch (error) {
-      toastsError({
-        msg: { text: "Error saving team." },
-        err: error,
-      });
       console.error("Error saving team:", error);
     } finally {
-      busyStore.stopBusy("save-team");
     }
   }
 

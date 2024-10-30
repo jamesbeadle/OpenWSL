@@ -3,10 +3,8 @@
   import { userStore } from "$lib/stores/user-store";
   import { clubStore } from "$lib/stores/club-store";
   import { systemStore } from "$lib/stores/system-store";
-  import { toastsError, toastsShow } from "$lib/stores/toasts-store";
   import UpdateUsernameModal from "$lib/components/profile/update-username-modal.svelte";
   import UpdateFavouriteTeamModal from "./update-favourite-team-modal.svelte";
-  import { busyStore, Spinner } from "@dfinity/gix-components";
   import CopyIcon from "$lib/icons/CopyIcon.svelte";
   import { userGetProfilePicture } from "$lib/derived/user.derived";
   import LocalSpinner from "../local-spinner.svelte";
@@ -52,10 +50,6 @@
         joinedDate = getDateFromBigInt(Number(value.createDate));
       });
     } catch (error) {
-      toastsError({
-        msg: { text: "Error fetching profile detail." },
-        err: error,
-      });
       console.error("Error fetching profile detail:", error);
     } finally {
       isLoading = false;
@@ -80,10 +74,6 @@
         loadingBalances = false;
       }
     } catch (error) {
-      toastsError({
-        msg: { text: "Error fetching profile detail." },
-        err: error,
-      });
       console.error("Error fetching profile detail:", error);
       clearInterval(dot_interval);
       loadingBalances = false;
@@ -135,29 +125,14 @@
   }
 
   async function uploadProfileImage(file: File) {
-    busyStore.startBusy({
-      initiator: "upload-image",
-      text: "Uploading profile picture...",
-    });
 
     try {
       await userStore.updateProfilePicture(file);
       await userStore.cacheProfile();
       await userStore.sync();
-
-      toastsShow({
-        text: "Profile image updated.",
-        level: "success",
-        duration: 2000,
-      });
     } catch (error) {
-      toastsError({
-        msg: { text: "Error updating profile image." },
-        err: error,
-      });
       console.error("Error updating profile image", error);
     } finally {
-      busyStore.stopBusy("upload-image");
     }
   }
 
@@ -165,11 +140,6 @@
     try {
       const textToCopy = $userStore ? $userStore.principalId : "";
       await navigator.clipboard.writeText(textToCopy);
-      toastsShow({
-        text: "Copied to clipboard.",
-        level: "success",
-        duration: 2000,
-      });
     } catch (err) {
       console.error("Failed to copy:", err);
     }

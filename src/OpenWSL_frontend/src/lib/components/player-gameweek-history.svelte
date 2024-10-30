@@ -2,7 +2,6 @@
   import { onMount } from "svelte";
   import { page } from "$app/stores";
   import { systemStore } from "$lib/stores/system-store";
-  import { toastsError } from "$lib/stores/toasts-store";
   import { seasonStore } from "$lib/stores/season-store";
   import { clubStore } from "$lib/stores/club-store";
   import { fixtureStore } from "$lib/stores/fixture-store";
@@ -48,10 +47,6 @@
         $systemStore?.calculationSeasonId ?? 1
       );
     } catch (error) {
-      toastsError({
-        msg: { text: "Error fetching player gameweek history." },
-        err: error,
-      });
       console.error("Error fetching player gameweek history:", error);
     } finally {
       isLoading = false;

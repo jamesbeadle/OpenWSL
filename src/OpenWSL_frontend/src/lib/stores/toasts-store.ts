@@ -1,6 +1,6 @@
+/* 
 import type { ToastMsg } from "$lib/types//toast";
 import { errorDetailToString } from "$lib/utils/error.utils";
-import { toastsStore } from "@dfinity/gix-components";
 import { nonNullish } from "@dfinity/utils";
 
 export const toastsShow = (msg: ToastMsg): symbol => toastsStore.show(msg);
@@ -27,3 +27,4 @@ export const toastsClean = () => toastsStore.reset(["success", "warn", "info"]);
 
 export const toastsHide = (ids: symbol[]) =>
   ids.forEach((id) => toastsStore.hide(id));
+*/

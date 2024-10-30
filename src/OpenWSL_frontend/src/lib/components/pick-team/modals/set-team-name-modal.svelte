@@ -1,6 +1,6 @@
 <script lang="ts">
+    import Modal from "$lib/components/modal.svelte";
   import { userStore } from "$lib/stores/user-store";
-  import { Modal } from "@dfinity/gix-components";
   import type { Writable } from "svelte/store";
 
   export let visible: boolean;
