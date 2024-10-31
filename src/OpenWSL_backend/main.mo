@@ -465,7 +465,22 @@
       //set system state
       //await checkCanisterCycles(); 
       //await setSystemTimers();
-      await updateManagerCanisterWasms();
+      /* Use to put on hold:
+      let _ = await seasonManager.updateSystemState({
+        calculationGameweek = 7;
+        calculationMonth = 11;
+        calculationSeasonId = 1;
+        onHold = true;
+        pickTeamGameweek = 7;
+        pickTeamMonth = 11;
+        pickTeamSeasonId = 1;
+        seasonActive = true;
+        transferWindowActive = false;
+        version = "2.0.0"
+
+      });
+      */
+      //await updateManagerCanisterWasms();
 
       await seasonManager.updateDataHash("clubs");
       await seasonManager.updateDataHash("fixtures");

@@ -1,1 +1,2 @@
-import{j as m}from"../chunks/index.DJhnritm.js";export{m as component};
+import { j as m } from "../chunks/index.DJhnritm.js";
+export { m as component };

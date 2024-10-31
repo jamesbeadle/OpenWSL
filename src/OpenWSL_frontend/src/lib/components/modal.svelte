@@ -40,7 +40,7 @@
       z-index: 9999;
     }
     .modal-content {
-      background-color: #fff;
+      background-color: #000000;
       padding: 1em;
       position: relative;
       max-width: 90%;

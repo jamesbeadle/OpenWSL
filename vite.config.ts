@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 import type { UserConfig } from "vite";
 import { defineConfig, loadEnv } from "vite";
 
-const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
+const NodePolyfillPlugin = require("node-polyfill-webpack-plugin");
 
 const file = fileURLToPath(new URL("package.json", import.meta.url));
 const json = readFileSync(file, "utf8");
@@ -117,7 +117,7 @@ const config: UserConfig = {
       // Enable esbuild polyfill plugins
       plugins: [
         new NodePolyfillPlugin(),
-,
+        ,
         {
           name: "fix-node-globals-polyfill",
           setup(build) {
