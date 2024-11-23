@@ -13,6 +13,7 @@ module Environment {
   public let SNS_INDEX_CANISTER_ID = "dnqcx-eyaaa-aaaaq-aacrq-cai";
   public let SNS_SWAP_CANISTER_ID = "dkred-jaaaa-aaaaq-aacra-cai";
   public let DATA_CANISTER_ID = "52fzd-2aaaa-aaaal-qmzsa-cai";
+  public let OPENFPL_BACKEND_CANISTER_ID = "y22zx-giaaa-aaaal-qmzpq-cai";
   public let OPENWSL_BACKEND_CANISTER_ID = "5bafg-ayaaa-aaaal-qmzqq-cai";
   public let FOOTBALL_GOD_BACKEND_CANISTER_ID = "44kin-waaaa-aaaal-qbxra-cai";
   public let WATERWAY_LABS_BACKEND_CANISTER_ID = "rbqtt-7yaaa-aaaal-qcndq-cai";
@@ -27,6 +28,7 @@ module Environment {
   public let SNS_INDEX_CANISTER_ID = "a3shf-5eaaa-aaaaa-qaafa-cai";
   public let SNS_SWAP_CANISTER_ID = "asrmz-lmaaa-aaaaa-qaaeq-cai";
   public let DATA_CANISTER_ID = "asrmz-lmaaa-aaaaa-qaaeq-cai";
+  public let OPENFPL_BACKEND_CANISTER_ID = "bw4dl-smaaa-aaaaa-qaacq-cai";
   public let OPENWSL_BACKEND_CANISTER_ID = "by6od-j4aaa-aaaaa-qaadq-cai";
   public let FOOTBALL_GOD_BACKEND_CANISTER_ID = "44kin-waaaa-aaaal-qbxra-cai";
 */

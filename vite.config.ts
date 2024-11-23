@@ -1,3 +1,4 @@
+import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
 import inject from "@rollup/plugin-inject";
 import { sveltekit } from "@sveltejs/kit/vite";
 import { readFileSync } from "fs";
@@ -5,8 +6,6 @@ import { dirname, join, resolve } from "path";
 import { fileURLToPath } from "url";
 import type { UserConfig } from "vite";
 import { defineConfig, loadEnv } from "vite";
-
-const NodePolyfillPlugin = require("node-polyfill-webpack-plugin");
 
 const file = fileURLToPath(new URL("package.json", import.meta.url));
 const json = readFileSync(file, "utf8");
@@ -116,8 +115,7 @@ const config: UserConfig = {
       },
       // Enable esbuild polyfill plugins
       plugins: [
-        new NodePolyfillPlugin(),
-        ,
+        NodeModulesPolyfillPlugin(),
         {
           name: "fix-node-globals-polyfill",
           setup(build) {

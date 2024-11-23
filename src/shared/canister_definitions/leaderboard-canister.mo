@@ -40,7 +40,7 @@ actor class _LeaderboardCanister() {
       return;
     };
 
-    let callerInArray = Array.find<Base.CanisterId>([Environment.OPENWSL_BACKEND_CANISTER_ID, Environment.OPENWSL_BACKEND_CANISTER_ID], func(canisterId: Base.CanisterId) : Bool{
+    let callerInArray = Array.find<Base.CanisterId>([Environment.OPENFPL_BACKEND_CANISTER_ID, Environment.OPENWSL_BACKEND_CANISTER_ID], func(canisterId: Base.CanisterId) : Bool{
       canisterId == Principal.toText(caller);
     });
 
@@ -85,7 +85,6 @@ actor class _LeaderboardCanister() {
     };
 
     if(month == 0){
-      await debugLog("Adding gameweek leaderboard chunk");
       addGameweekLeaderboardChunk(seasonId, gameweek, entriesChunk);
       return;
     };
@@ -94,17 +93,12 @@ actor class _LeaderboardCanister() {
   };
 
   public shared ({ caller }) func finaliseUpdate(seasonId: FootballTypes.SeasonId, month: Base.CalendarMonth, gameweek: FootballTypes.GameweekNumber) : async () {
-    
-    await debugLog("Finalising leaderbord update");
     assert not Principal.isAnonymous(caller);
     let principalId = Principal.toText(caller);
     assert principalId == controllerPrincipalId;
     entryUpdatesAllowed := false;
 
-      await debugLog("Calling calculate leaderboards with season: " # Nat16.toText(seasonId) # ", gameweek: " # Nat8.toText(gameweek) # ", month: " # Nat8.toText(month));
     await calculateLeaderboards(seasonId, gameweek, month);
-    await debugLog("Finished Finalising leaderbord update");
-    
   };
 
   private func addGameweekLeaderboardChunk(seasonId: FootballTypes.SeasonId, gameweek: FootballTypes.GameweekNumber, entriesChunk : [T.LeaderboardEntry]){
@@ -229,21 +223,17 @@ actor class _LeaderboardCanister() {
 
   private func calculateLeaderboards(seasonId: FootballTypes.SeasonId, gameweek: FootballTypes.GameweekNumber, month: Base.CalendarMonth) : async (){
     
-    await debugLog("calulating leaderboards");
     
     if(month == 0 and gameweek == 0){
-      await debugLog("calulating season leaderboard");
       calculateSeasonLeaderboard(seasonId);
       return;
     };  
 
     if(gameweek == 0){
-    await debugLog("calulating monthly leaderboard");
       calculateMonthlyLeaderboards(seasonId, month);
       return;
     };
 
-    await debugLog("calulating weekly");
     await calculateWeeklyLeaderboard(seasonId, gameweek); 
   };
 
@@ -264,7 +254,7 @@ actor class _LeaderboardCanister() {
               return #less;
         });
 
-        let positionedGameweekEntries = Utilities.assignPositionText(List.fromArray<T.LeaderboardEntry>(sortedGameweekEntries)); //TODO (LEADERBOARD) update with football god logic
+        let positionedGameweekEntries = Utilities.assignPositionText(List.fromArray<T.LeaderboardEntry>(sortedGameweekEntries));
 
         var updatedLeaderboard: T.SeasonLeaderboard = {
           seasonId = foundLeaderboard.seasonId;
@@ -295,7 +285,7 @@ actor class _LeaderboardCanister() {
             return #less;
       });
 
-      let positionedGameweekEntries = Utilities.assignPositionText(List.fromArray<T.LeaderboardEntry>(sortedGameweekEntries)); //TODO (LEADERBOARD) update with football god logic
+      let positionedGameweekEntries = Utilities.assignPositionText(List.fromArray<T.LeaderboardEntry>(sortedGameweekEntries));
 
       var updatedLeaderboard: T.MonthlyLeaderboard = {
         seasonId = monthlyLeaderboard.seasonId;
@@ -321,19 +311,16 @@ actor class _LeaderboardCanister() {
       leaderboard.seasonId == seasonId and leaderboard.gameweek == gameweek
     });
     
-    await debugLog("calculating in here");
     switch(currentLeaderboard){
       case (?foundLeaderboard){
 
-    await debugLog("getting sorted entries");
         let sortedGameweekEntries = Array.sort(List.toArray(foundLeaderboard.entries), func(entry1: T.LeaderboardEntry, entry2: T.LeaderboardEntry) : Order.Order{
           if (entry1.points < entry2.points) { return #greater };
           if (entry1.points == entry2.points) { return #equal };
               return #less;
         });
 
-    await debugLog("positioning");
-        let positionedGameweekEntries = Utilities.assignPositionText(List.fromArray<T.LeaderboardEntry>(sortedGameweekEntries)); //TODO (LEADERBOARD) update with football god logic
+        let positionedGameweekEntries = Utilities.assignPositionText(List.fromArray<T.LeaderboardEntry>(sortedGameweekEntries));
 
         var updatedLeaderboard: T.WeeklyLeaderboard = {
           seasonId = foundLeaderboard.seasonId;
@@ -342,7 +329,6 @@ actor class _LeaderboardCanister() {
           gameweek = gameweek;
         };
 
-    await debugLog("total entries: " # Nat.toText(updatedLeaderboard.totalEntries) # "setting leaderboard for season id: " # Nat16.toText(seasonId) # ", gameweek: " # Nat8.toText(gameweek) # ".");
         let leaderboardBuffer = Buffer.fromArray<T.WeeklyLeaderboard>(
           Array.filter<T.WeeklyLeaderboard>(weekly_leaderboards, func(leaderboard: T.WeeklyLeaderboard){
             return leaderboard.seasonId != seasonId or gameweek != gameweek
@@ -379,7 +365,7 @@ actor class _LeaderboardCanister() {
             return #less;
           },
         );
-
+        
         let cutoffIndex = 99;
         let lastQualifyingPoints = sortedArray[cutoffIndex].points;
         var lastIndexForPrizes = cutoffIndex;
@@ -767,7 +753,6 @@ actor class _LeaderboardCanister() {
   };
 
   public shared ({ caller }) func getTotalLeaderboards() : async Nat {
-    await debugLog("IN LEADERBOARD CANISTER");
     assert not Principal.isAnonymous(caller);
     let callerPrincipalId = Principal.toText(caller);
     assert callerPrincipalId == controllerPrincipalId;
@@ -782,23 +767,5 @@ actor class _LeaderboardCanister() {
   };
 
   private func postUpgradeCallback() : async (){
-    await debugLog("Leaderboard canister post upgrade complete");
-    controllerPrincipalId := Environment.OPENWSL_BACKEND_CANISTER_ID;
-    initialised := true;
-  };
-
-  private func debugLog(text: Text) : async (){
-    let waterway_labs_canister = actor ("rbqtt-7yaaa-aaaal-qcndq-cai") : actor {
-      logSystemEvent : (dto: DTOs.SystemEventDTO) -> async ();
-    };
-
-    await waterway_labs_canister.logSystemEvent({
-      eventDetail = text;
-      eventId = 0;
-      eventTime = Time.now();
-      eventTitle = "DEBUG";
-      eventType = #SystemCheck;
-    });
-
   };
 };

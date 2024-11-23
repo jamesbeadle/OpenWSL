@@ -8,6 +8,9 @@
   import Nat64 "mo:base/Nat64";
   import Nat "mo:base/Nat";
   import Option "mo:base/Option";
+import Text "mo:base/Text";
+import Time "mo:base/Time";
+import Buffer "mo:base/Buffer";
 
   import Base "../shared/types/base_types";
   import FootballTypes "../shared/types/football_types";
@@ -15,22 +18,29 @@
   import DTOs "../shared/dtos/DTOs";
   import RequestDTOs "../shared/dtos/request_DTOs";
   import Countries "../shared/Countries";
+  import FPLLedger "../shared/def/FPLLedger";
+  import Root "../shared/sns-wrappers/root";
 
   import Management "../shared/utils/Management";
   import ManagerCanister "../shared/canister_definitions/manager-canister";
+  import LeaderboardCanister "../shared/canister_definitions/leaderboard-canister";
   import DataManager "../shared/managers/data-manager";
   import LeaderboardManager "../shared/managers/leaderboard-manager";
   import UserManager "../shared/managers/user-manager";
   import SeasonManager "../shared/managers/season-manager";
   import Environment "./Environment";
   import NetworkEnvironmentVariables "../shared/network_environment_variables";
+  import Account "../shared/lib/Account";
+  import Utilities "../shared/utils/utilities";
 
   actor Self {
     
+    private let ledger : FPLLedger.Interface = actor (FPLLedger.CANISTER_ID);
+
     private let userManager = UserManager.UserManager(Environment.BACKEND_CANISTER_ID, Environment.NUM_OF_GAMEWEEKS);
     private let dataManager = DataManager.DataManager();
     private let seasonManager = SeasonManager.SeasonManager(Environment.NUM_OF_GAMEWEEKS);
-    private let leaderboardManager = LeaderboardManager.LeaderboardManager(Environment.BACKEND_CANISTER_ID, Environment.NUM_OF_GAMEWEEKS, Environment.NUM_OF_MONTHS);
+    private let leaderboardManager = LeaderboardManager.LeaderboardManager(Environment.BACKEND_CANISTER_ID);
     
     private func isManagerCanister(principalId: Text) : Bool {
       let managerCanisterIds = userManager.getUniqueManagerCanisterIds();
@@ -113,15 +123,13 @@
         getClubs : shared query (leagueId: FootballTypes.LeagueId) -> async Result.Result<[FootballTypes.Club], T.Error>;
       };
       return await data_canister.getClubs(Environment.LEAGUE_ID);
-      //return await dataManager.getClubs(Environment.LEAGUE_ID); //Todo implement when figure out query function
     };
 
-    public shared composite query func getFixtures(dto: RequestDTOs.RequestFixturesDTO) : async Result.Result<[DTOs.FixtureDTO], T.Error> {
+    public shared composite query func getFixtures(leagueId: FootballTypes.LeagueId) : async Result.Result<[DTOs.FixtureDTO], T.Error> {
       let data_canister = actor (NetworkEnvironmentVariables.DATA_CANISTER_ID) : actor {
-        getFixtures : shared query (dto: RequestDTOs.RequestFixturesDTO) -> async Result.Result<[DTOs.FixtureDTO], T.Error>;
+        getFixtures : shared query (leagueId: FootballTypes.LeagueId) -> async Result.Result<[DTOs.FixtureDTO], T.Error>;
       };
-      return await data_canister.getFixtures(dto);
-      //return await dataManager.getFixtures(Environment.LEAGUE_ID, dto); //Todo implement when figure out query function
+      return await data_canister.getFixtures(leagueId);
     };
 
     public shared composite query func getSeasons() : async Result.Result<[DTOs.SeasonDTO], T.Error> {
@@ -129,7 +137,6 @@
         getSeasons : shared query (leagueId: FootballTypes.LeagueId) -> async Result.Result<[DTOs.SeasonDTO], T.Error>;
       };
       return await data_canister.getSeasons(Environment.LEAGUE_ID);
-      //return await dataManager.getSeasons(Environment.LEAGUE_ID); //Todo implement when figure out query function
     };
 
     public shared composite query func getPostponedFixtures() : async Result.Result<[DTOs.FixtureDTO], T.Error> {
@@ -166,7 +173,6 @@
         getRetiredPlayers : shared query (leagueId: FootballTypes.LeagueId, dto: DTOs.ClubFilterDTO) -> async Result.Result<[DTOs.PlayerDTO], T.Error>;
       };
       return await data_canister.getRetiredPlayers(Environment.LEAGUE_ID, dto);
-      //return await dataManager.getRetiredPlayers(Environment.LEAGUE_ID, dto); //Todo implement when figure out query function
     };
 
     public shared composite query func getPlayerDetailsForGameweek(dto: DTOs.GameweekFiltersDTO) : async Result.Result<[DTOs.PlayerPointsDTO], T.Error> {
@@ -174,7 +180,6 @@
         getPlayerDetailsForGameweek : shared query (leagueId: FootballTypes.LeagueId, dto: DTOs.GameweekFiltersDTO) -> async Result.Result<[DTOs.PlayerPointsDTO], T.Error>;
       };
       return await data_canister.getPlayerDetailsForGameweek(Environment.LEAGUE_ID, dto);
-      //return await dataManager.getPlayerDetailsForGameweek(Environment.LEAGUE_ID, dto); //Todo implement when figure out query function
     };
 
     public shared func getPlayersMap(dto: DTOs.GameweekFiltersDTO) : async Result.Result<[(Nat16, DTOs.PlayerScoreDTO)], T.Error> {
@@ -182,7 +187,6 @@
         getPlayersMap : shared query (leagueId: FootballTypes.LeagueId, dto: DTOs.GameweekFiltersDTO) -> async Result.Result<[(Nat16, DTOs.PlayerScoreDTO)], T.Error>;
       };
       return await data_canister.getPlayersMap(Environment.LEAGUE_ID, dto);
-      //return await dataManager.getPlayersMap(Environment.LEAGUE_ID, dto); //Todo implement when figure out query function
     };
 
     public shared func getPlayerDetails(dto: DTOs.GetPlayerDetailsDTO) : async Result.Result<DTOs.PlayerDetailDTO, T.Error> {
@@ -190,7 +194,6 @@
         getPlayerDetailsForGameweek : shared query (leagueId: FootballTypes.LeagueId, dto: DTOs.GetPlayerDetailsDTO) -> async Result.Result<DTOs.PlayerDetailDTO, T.Error>;
       };
       return await data_canister.getPlayerDetailsForGameweek(Environment.LEAGUE_ID, dto);
-      //return await dataManager.getPlayerDetails(Environment.LEAGUE_ID, dto); //Todo implement when figure out query function
     };
 
     public shared query func getCountries() : async Result.Result<[DTOs.CountryDTO], T.Error> {
@@ -324,6 +327,330 @@
     public shared func getActiveLeaderboardCanisterId() : async Result.Result<Text, T.Error> {
       return #ok(leaderboardManager.getStableActiveCanisterId());
     };
+    
+    //Canister topup functions
+  
+    public shared func getCanisters(dto: DTOs.GetCanistersDTO) : async Result.Result<[DTOs.CanisterDTO], T.Error> {
+      let canistersBuffer = Buffer.fromArray<DTOs.CanisterDTO>([]);
+      let root_canister = actor (NetworkEnvironmentVariables.SNS_ROOT_CANISTER_ID) : actor {
+        get_sns_canisters_summary : (request: Root.GetSnsCanistersSummaryRequest) -> async Root.GetSnsCanistersSummaryResponse;
+      };
+  
+      switch(dto.canisterType){
+        case (#SNS){
+
+          let summaryResult = await root_canister.get_sns_canisters_summary({update_canister_list = ?false});
+          var snsCanistersBuffer = Buffer.fromArray<Root.CanisterSummary>([]);
+          
+          snsCanistersBuffer := appendSNSCanister(snsCanistersBuffer, summaryResult.governance);
+          snsCanistersBuffer := appendSNSCanister(snsCanistersBuffer, summaryResult.root); 
+          snsCanistersBuffer := appendSNSCanister(snsCanistersBuffer, summaryResult.swap); 
+          snsCanistersBuffer := appendSNSCanister(snsCanistersBuffer, summaryResult.ledger); 
+          snsCanistersBuffer := appendSNSCanister(snsCanistersBuffer, summaryResult.index);
+
+          for(canister in Iter.fromArray(Buffer.toArray(snsCanistersBuffer))){
+            switch(canister.canister_id){
+              case (?foundCanisterId){
+                let canisterTopups = Array.filter<Base.CanisterTopup>(topups, func(topup: Base.CanisterTopup){
+                  topup.canisterId == Principal.toText(foundCanisterId);
+                });
+
+                switch(canister.status){
+                  case (?foundStatus){
+
+                    canistersBuffer.add({
+                      canisterId = Principal.toText(foundCanisterId);
+                      cycles = foundStatus.cycles;
+                      computeAllocation = foundStatus.settings.compute_allocation;
+                      topups = canisterTopups;
+                    });
+
+                  };
+                  case (null){}
+                };
+              };
+              case (null){}
+            };
+          };
+        };
+        case (#Manager){
+          let managerCanisterIds = userManager.getUniqueManagerCanisterIds();
+          for(canisterId in Iter.fromArray(managerCanisterIds)){
+
+            let IC : Management.Management = actor (NetworkEnvironmentVariables.Default);
+            let canisterInfo = await (
+              IC.canister_status(
+                {
+                  canister_id = Principal.fromText(canisterId); 
+                  num_requested_changes = null
+                }),
+            );
+
+            let canisterTopups = Array.filter<Base.CanisterTopup>(topups, func(topup: Base.CanisterTopup){
+              topup.canisterId == canisterId;
+            });
+
+            canistersBuffer.add({
+              canisterId = canisterId;
+              cycles = canisterInfo.cycles;
+              computeAllocation = canisterInfo.settings.compute_allocation;
+              topups = canisterTopups;
+            });
+          };
+        };
+        case (#Leaderboard){
+          let leaderboardCanisterIds = leaderboardManager.getUniqueLeaderboardCanisterIds();
+          for(canisterId in Iter.fromArray(leaderboardCanisterIds)){
+
+            let IC : Management.Management = actor (NetworkEnvironmentVariables.Default);
+            let canisterInfo = await (
+              IC.canister_status(
+                {
+                  canister_id = Principal.fromText(canisterId); 
+                  num_requested_changes = null
+                }),
+            );
+
+            let canisterTopups = Array.filter<Base.CanisterTopup>(topups, func(topup: Base.CanisterTopup){
+              topup.canisterId == canisterId;
+            });
+
+            canistersBuffer.add({
+              canisterId = canisterId;
+              cycles = canisterInfo.cycles;
+              computeAllocation = canisterInfo.settings.compute_allocation;
+              topups = canisterTopups;
+            });
+          };
+        };
+        case (#Archive){
+          let summaryResult = await root_canister.get_sns_canisters_summary({update_canister_list = ?false});
+          
+          for (archiveCanister in Iter.fromArray(summaryResult.archives)){
+            switch(archiveCanister.canister_id){
+              case (?foundCanisterId){
+                let canisterTopups = Array.filter<Base.CanisterTopup>(topups, func(topup: Base.CanisterTopup){
+                  topup.canisterId == Principal.toText(foundCanisterId);
+                });
+
+                switch(archiveCanister.status){
+                  case (?foundStatus){
+
+                    canistersBuffer.add({
+                      canisterId = Principal.toText(foundCanisterId);
+                      cycles = foundStatus.cycles;
+                      computeAllocation = foundStatus.settings.compute_allocation;
+                      topups = canisterTopups;
+                    });
+
+                  };
+                  case (null){}
+                };
+              };
+              case (null){}
+            };
+          };
+        };
+        case (#Dapp){
+          let summaryResult = await root_canister.get_sns_canisters_summary({update_canister_list = ?false});
+          let dappsMinusBackend = Array.filter<Root.CanisterSummary>(
+            summaryResult.dapps, 
+            func(dapp: Root.CanisterSummary){
+              dapp.canister_id != ?Principal.fromText(NetworkEnvironmentVariables.OPENWSL_BACKEND_CANISTER_ID);
+            }
+          );
+          for (dappCanister in Iter.fromArray(dappsMinusBackend)){
+            switch(dappCanister.canister_id){
+              case (?foundCanisterId){
+                let canisterTopups = Array.filter<Base.CanisterTopup>(topups, func(topup: Base.CanisterTopup){
+                  topup.canisterId == Principal.toText(foundCanisterId);
+                });
+
+                switch(dappCanister.status){
+                  case (?foundStatus){
+
+                    canistersBuffer.add({
+                      canisterId = Principal.toText(foundCanisterId);
+                      cycles = foundStatus.cycles;
+                      computeAllocation = foundStatus.settings.compute_allocation;
+                      topups = canisterTopups;
+                    });
+
+                  };
+                  case (null){}
+                };
+              };
+              case (null){}
+            };
+          };
+
+          //TODO: Remove after assigned to SNS
+          let IC : Management.Management = actor (NetworkEnvironmentVariables.Default);
+          let frontendCanisterInfo = await (
+            IC.canister_status(
+              {
+                canister_id = Principal.fromText(Environment.FRONTEND_CANISTER_ID); 
+                num_requested_changes = null
+              }),
+          );
+
+          let frontendCanisterTopups = Array.filter<Base.CanisterTopup>(topups, func(topup: Base.CanisterTopup){
+            topup.canisterId == Environment.FRONTEND_CANISTER_ID;
+          });
+
+          canistersBuffer.add({
+            canisterId = Environment.FRONTEND_CANISTER_ID;
+            cycles = frontendCanisterInfo.cycles;
+            computeAllocation = frontendCanisterInfo.settings.compute_allocation;
+            topups = frontendCanisterTopups;
+          });
+
+          //TODO: Remove after assigned to SNS
+          let dataCanisterInfo = await (
+            IC.canister_status(
+              {
+                canister_id = Principal.fromText(NetworkEnvironmentVariables.DATA_CANISTER_ID); 
+                num_requested_changes = null
+              }),
+          );
+
+          let dataCanisterTopups = Array.filter<Base.CanisterTopup>(topups, func(topup: Base.CanisterTopup){
+            topup.canisterId == NetworkEnvironmentVariables.DATA_CANISTER_ID;
+          });
+
+          canistersBuffer.add({
+            canisterId = NetworkEnvironmentVariables.DATA_CANISTER_ID;
+            cycles = dataCanisterInfo.cycles;
+            computeAllocation = dataCanisterInfo.settings.compute_allocation;
+            topups = dataCanisterTopups;
+          });
+
+          
+        };
+      };
+
+      return #ok(Buffer.toArray(canistersBuffer));
+    };
+
+    private func appendSNSCanister(buffer: Buffer.Buffer<Root.CanisterSummary>, canisterSummary: ?Root.CanisterSummary) : Buffer.Buffer<Root.CanisterSummary> {
+      
+      switch(canisterSummary){
+        case (?foundCanister){
+          buffer.add(foundCanister);     
+        };
+        case (null){}
+      };
+      return buffer;
+    };
+
+    private func checkCanisterCycles() : async () {
+      let root_canister = actor (NetworkEnvironmentVariables.SNS_ROOT_CANISTER_ID) : actor {
+        get_sns_canisters_summary : (request: Root.GetSnsCanistersSummaryRequest) -> async Root.GetSnsCanistersSummaryResponse;
+      };
+
+      let summaryResult = await root_canister.get_sns_canisters_summary({update_canister_list = ?false});
+      let dappsMinusBackend = Array.filter<Root.CanisterSummary>(
+        summaryResult.dapps, 
+        func(dapp: Root.CanisterSummary){
+          dapp.canister_id != ?Principal.fromText(NetworkEnvironmentVariables.OPENWSL_BACKEND_CANISTER_ID);
+        }
+      );
+      
+      for(dappCanister in Iter.fromArray(dappsMinusBackend)){
+        switch(dappCanister.canister_id){
+          case (?foundCanisterId){
+            let ignoreCanister = 
+              Principal.toText(foundCanisterId) == "bboqb-jiaaa-aaaal-qb6ea-cai" or 
+              Principal.toText(foundCanisterId) == "bgpwv-eqaaa-aaaal-qb6eq-cai" or 
+              Principal.toText(foundCanisterId) == "hqfmc-cqaaa-aaaal-qitcq-cai";
+            if(not ignoreCanister){
+              await queryAndTopupCanister(Principal.toText(foundCanisterId), 50_000_000_000_000, 25_000_000_000_000);
+            }
+          };
+          case (null){}
+        };
+      };
+
+      //TODO: Remove after assigned to SNS
+      await queryAndTopupCanister(Environment.FRONTEND_CANISTER_ID, 50_000_000_000_000, 25_000_000_000_000);
+      await queryAndTopupCanister(NetworkEnvironmentVariables.DATA_CANISTER_ID, 50_000_000_000_000, 25_000_000_000_000);
+       
+      let managerCanisterIds = userManager.getUniqueManagerCanisterIds();
+      for(canisterId in Iter.fromArray(managerCanisterIds)){
+        await queryAndTopupCanister(canisterId, 50_000_000_000_000, 25_000_000_000_000);
+      };
+
+      let leaderboardCanisterIds = leaderboardManager.getUniqueLeaderboardCanisterIds();
+      for(canisterId in Iter.fromArray(leaderboardCanisterIds)){
+        await queryAndTopupCanister(canisterId, 50_000_000_000_000, 25_000_000_000_000);
+      };
+
+      await topupCanister(summaryResult.index, 50_000_000_000_000, 25_000_000_000_000);
+      await topupCanister(summaryResult.governance, 50_000_000_000_000, 25_000_000_000_000);
+      await topupCanister(summaryResult.ledger, 50_000_000_000_000, 25_000_000_000_000);
+      await topupCanister(summaryResult.root, 50_000_000_000_000, 25_000_000_000_000);
+      await topupCanister(summaryResult.swap, 5_000_000_000_000, 2_500_000_000_000);
+      for(canisterId in Iter.fromArray(summaryResult.archives)){
+        await topupCanister(?canisterId, 5_000_000_000_000, 2_500_000_000_000);
+      };
+      
+      ignore Timer.setTimer<system>(#nanoseconds(Int.abs(86_400_000_000_000)), checkCanisterCycles);
+    };
+
+    private func topupCanister(canisterSummary: ?Root.CanisterSummary, topupTriggerAmount: Nat, topupAmount: Nat) : async(){
+      switch(canisterSummary){
+        case (?foundCanister){
+          switch(foundCanister.status){
+            case (?foundStatus){
+              if(foundStatus.cycles < topupTriggerAmount){
+                switch(foundCanister.canister_id){
+                  case (?foundCanisterId){
+                    let IC : Management.Management = actor (NetworkEnvironmentVariables.Default);
+                    let canisterActor = actor (Principal.toText(foundCanisterId)) : actor { };
+                    await Utilities.topup_canister_(canisterActor, IC, topupAmount);
+                    
+                    let topupsBuffer = Buffer.fromArray<Base.CanisterTopup>(topups);
+                    topupsBuffer.add({
+                      canisterId = Principal.toText(foundCanisterId); 
+                      cyclesAmount = topupAmount; 
+                      topupTime = Time.now();
+                    });
+                    topups := Buffer.toArray(topupsBuffer);
+                  };
+                  case (null){};
+                };
+              };
+            };
+            case(null){};
+          };
+        };
+        case (null){}
+      };
+    };
+
+    private func queryAndTopupCanister(canisterId: Base.CanisterId, cyclesTriggerAmount: Nat, topupAmount: Nat) : async(){
+      let IC : Management.Management = actor (NetworkEnvironmentVariables.Default);
+      let canisterActor = actor (canisterId) : actor { };
+
+      let canisterStatusResult = await Utilities.getCanisterStatus_(canisterActor, ?Principal.fromActor(Self), IC);
+      
+      switch(canisterStatusResult){
+        case (?canisterStatus){
+      
+          if(canisterStatus.cycles < cyclesTriggerAmount){
+            await Utilities.topup_canister_(canisterActor, IC, topupAmount);
+            let topupsBuffer = Buffer.fromArray<Base.CanisterTopup>(topups);
+            topupsBuffer.add({
+              canisterId = canisterId; 
+              cyclesAmount = topupAmount; 
+              topupTime = Time.now();
+            });
+            topups := Buffer.toArray(topupsBuffer);
+          }
+        };
+        case (null){};
+      };
+    };
 
     //stable variables
     //TODO: Add back timers
@@ -375,6 +702,7 @@
     private stable var stable_unique_manager_canister_ids : [Base.CanisterId] = [];
     private stable var stable_total_managers : Nat = 0;
     private stable var stable_active_manager_canister_id : Base.CanisterId = "";   
+    private stable var topups: [Base.CanisterTopup] = [];
 
     system func preupgrade() {
 
@@ -460,37 +788,26 @@
     };
 
     private func postUpgradeCallback() : async (){
-
+     
+      await checkCanisterCycles();
+      
       //TODO (GO LIVE)
       //set system state
-      //await checkCanisterCycles(); 
       //await setSystemTimers();
-      /* Use to put on hold:
-      let _ = await seasonManager.updateSystemState({
-        calculationGameweek = 7;
-        calculationMonth = 11;
-        calculationSeasonId = 1;
-        onHold = true;
-        pickTeamGameweek = 7;
-        pickTeamMonth = 11;
-        pickTeamSeasonId = 1;
-        seasonActive = true;
-        transferWindowActive = false;
-        version = "2.0.0"
-
-      });
-      */
-      //await updateManagerCanisterWasms();
-
+      await updateLeaderboardCanisterWasms();
+      await updateManagerCanisterWasms();
+      await seasonManager.updateDataHash("system_state");
+      await seasonManager.updateDataHash("countries");
       await seasonManager.updateDataHash("clubs");
       await seasonManager.updateDataHash("fixtures");
+      await seasonManager.updateDataHash("players");
+      await seasonManager.updateDataHash("player_events");
       await seasonManager.updateDataHash("weekly_leaderboard");
       await seasonManager.updateDataHash("monthly_leaderboards");
       await seasonManager.updateDataHash("season_leaderboard");
-      await seasonManager.updateDataHash("players");
-      await seasonManager.updateDataHash("player_events");
-      await seasonManager.updateDataHash("countries");
-      await seasonManager.updateDataHash("system_state");
+      /*
+      */
+      //let _ = await transferFPLToNewBackendCanister();
     };
 
 
@@ -501,6 +818,18 @@
         await IC.stop_canister({ canister_id = Principal.fromText(canisterId); });
         let oldManagement = actor (canisterId) : actor {};
         let _ = await (system ManagerCanister._ManagerCanister)(#upgrade oldManagement)();
+        await IC.start_canister({ canister_id = Principal.fromText(canisterId); });
+      };
+    };
+
+
+    private func updateLeaderboardCanisterWasms() : async (){
+      let leaderboardCanisterIds = leaderboardManager.getUniqueLeaderboardCanisterIds();
+      let IC : Management.Management = actor (NetworkEnvironmentVariables.Default);
+      for(canisterId in Iter.fromArray(leaderboardCanisterIds)){
+        await IC.stop_canister({ canister_id = Principal.fromText(canisterId); });
+        let oldLeaderboard = actor (canisterId) : actor {};
+        let _ = await (system LeaderboardCanister._LeaderboardCanister)(#upgrade oldLeaderboard)();
         await IC.start_canister({ canister_id = Principal.fromText(canisterId); });
       };
     };
@@ -550,7 +879,17 @@
       };
     };
 
+    public shared func getWeeklyLeaderboards() : async [T.WeeklyLeaderboard]{
+       var leaderboard_canister = actor ("n26sp-cqaaa-aaaal-qna7q-cai") : actor {
+        getWeeklyLeaderboards : () -> async [T.WeeklyLeaderboard];
+      };
+
+      return await leaderboard_canister.getWeeklyLeaderboards();
+
+    };
+
     public shared ({ caller }) func calculateLeaderboards() : async Result.Result<(), T.Error> {
+      //TODO: Need a way to separate out month
       assert Principal.toText(caller) == NetworkEnvironmentVariables.FOOTBALL_GOD_BACKEND_CANISTER_ID;
       let systemStateResult = await getSystemState();
       switch(systemStateResult){
@@ -566,7 +905,7 @@
                 return club.id
               });
               let managerCanisterIds = userManager.getUniqueManagerCanisterIds();
-              let _ = leaderboardManager.calculateLeaderboards(systemState.calculationSeasonId, systemState.calculationGameweek, systemState.calculationMonth, managerCanisterIds, clubIds);
+              let _ = leaderboardManager.calculateLeaderboards(systemState.calculationSeasonId, systemState.calculationGameweek, 0, managerCanisterIds, clubIds);
               return #ok();
             };
             case (#err error){
@@ -578,6 +917,40 @@
           return #err(error);
         }
       };
+    };
+
+    public shared ({ caller }) func calculateWeeklyRewards(gameweek: FootballTypes.GameweekNumber) : async Result.Result<(), T.Error> {
+      assert Principal.toText(caller) == NetworkEnvironmentVariables.FOOTBALL_GOD_BACKEND_CANISTER_ID;
+      leaderboardManager.setupRewardPool(); //TODO REMOVE
+      let systemStateResult = seasonManager.getSystemState();
+      switch(systemStateResult){
+        case (#ok systemState){       
+          return await leaderboardManager.calculateWeeklyRewards(systemState.calculationSeasonId, gameweek);     };
+        case (#err error){
+          return #err(error);
+        }
+      } 
+    };
+
+    public shared ({ caller }) func payWeeklyRewards(gameweek: FootballTypes.GameweekNumber) : async Result.Result<(), T.Error> {
+      assert Principal.toText(caller) == NetworkEnvironmentVariables.FOOTBALL_GOD_BACKEND_CANISTER_ID;
+      let systemStateResult = seasonManager.getSystemState();
+      switch(systemStateResult){
+        case (#ok systemState){       
+          return await leaderboardManager.payWeeklyRewards(systemState.calculationSeasonId, gameweek);     
+        };
+        case (#err error){
+          return #err(error);
+        }
+      } 
+    };
+
+    public shared query func getWeeklyRewards(seasonId: FootballTypes.SeasonId, gameweek: FootballTypes.GameweekNumber) : async Result.Result<T.WeeklyRewards, T.Error> {
+      return leaderboardManager.getWeeklyRewards(seasonId, gameweek);
+    };
+
+    public shared query func getWeeklyCanisters() : async Result.Result<[(FootballTypes.SeasonId, [(FootballTypes.GameweekNumber, Base.CanisterId)])], T.Error> {
+      return #ok(stable_weekly_leaderboard_canister_ids);
     };
 
     public shared ({ caller }) func notifyAppsOfLoan(leagueId: FootballTypes.LeagueId, playerId: FootballTypes.PlayerId) : async Result.Result<(), T.Error> {
@@ -592,6 +965,20 @@
       return #ok();
     };
 
-    
+    public func transferFPLToNewBackendCanister() : async FPLLedger.TransferResult {
+      
+      let one_fpl : Nat = 100_000_000;
+      let fpl_fee : Nat = 100_000;
+      let e8s = one_fpl * 1_764_900;
+      //1764900
+      return await ledger.icrc1_transfer({
+        memo = ?Text.encodeUtf8("0");
+        from_subaccount = ?Account.defaultSubaccount();
+        to = {owner = Principal.fromText(NetworkEnvironmentVariables.OPENWSL_BACKEND_CANISTER_ID); subaccount = null};
+        amount = e8s - fpl_fee;
+        fee = ?fpl_fee;
+        created_at_time =?Nat64.fromNat(Int.abs(Time.now()));
+      });
+    };
 
   };

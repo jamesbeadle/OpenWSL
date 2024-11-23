@@ -24,22 +24,12 @@ function set_assets(path) {
   assets = initial.assets = path;
 }
 const SVELTE_KIT_ASSETS = "/_svelte_kit_assets";
-const ENDPOINT_METHODS = [
-  "GET",
-  "POST",
-  "PUT",
-  "PATCH",
-  "DELETE",
-  "OPTIONS",
-  "HEAD",
-];
+const ENDPOINT_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"];
 const PAGE_METHODS = ["GET", "POST", "HEAD"];
 function negotiate(accept, types) {
   const parts = [];
   accept.split(",").forEach((str, i) => {
-    const match = /([^/ \t]+)\/([^; \t]+)[ \t]*(?:;[ \t]*q=([0-9.]+))?/.exec(
-      str,
-    );
+    const match = /([^/ \t]+)\/([^; \t]+)[ \t]*(?:;[ \t]*q=([0-9.]+))?/.exec(str);
     if (match) {
       const [, type, subtype, q = "1"] = match;
       parts.push({ type, subtype, q: +q, i });
@@ -49,10 +39,10 @@ function negotiate(accept, types) {
     if (a.q !== b.q) {
       return b.q - a.q;
     }
-    if ((a.subtype === "*") !== (b.subtype === "*")) {
+    if (a.subtype === "*" !== (b.subtype === "*")) {
       return a.subtype === "*" ? 1 : -1;
     }
-    if ((a.type === "*") !== (b.type === "*")) {
+    if (a.type === "*" !== (b.type === "*")) {
       return a.type === "*" ? 1 : -1;
     }
     return a.i - b.i;
@@ -62,9 +52,7 @@ function negotiate(accept, types) {
   for (const mimetype of types) {
     const [type, subtype] = mimetype.split("/");
     const priority = parts.findIndex(
-      (part) =>
-        (part.type === type || part.type === "*") &&
-        (part.subtype === subtype || part.subtype === "*"),
+      (part) => (part.type === type || part.type === "*") && (part.subtype === subtype || part.subtype === "*")
     );
     if (priority !== -1 && priority < min_priority) {
       accepted = mimetype;
@@ -74,8 +62,7 @@ function negotiate(accept, types) {
   return accepted;
 }
 function is_content_type(request, ...types) {
-  const type =
-    request.headers.get("content-type")?.split(";", 1)[0].trim() ?? "";
+  const type = request.headers.get("content-type")?.split(";", 1)[0].trim() ?? "";
   return types.includes(type.toLowerCase());
 }
 function is_form_content_type(request) {
@@ -83,7 +70,7 @@ function is_form_content_type(request) {
     request,
     "application/x-www-form-urlencoded",
     "multipart/form-data",
-    "text/plain",
+    "text/plain"
   );
 }
 class HttpError {
@@ -141,17 +128,14 @@ function json(data, init2) {
   const body2 = JSON.stringify(data);
   const headers2 = new Headers(init2?.headers);
   if (!headers2.has("content-length")) {
-    headers2.set(
-      "content-length",
-      encoder$3.encode(body2).byteLength.toString(),
-    );
+    headers2.set("content-length", encoder$3.encode(body2).byteLength.toString());
   }
   if (!headers2.has("content-type")) {
     headers2.set("content-type", "application/json");
   }
   return new Response(body2, {
     ...init2,
-    headers: headers2,
+    headers: headers2
   });
 }
 const encoder$3 = new TextEncoder();
@@ -162,20 +146,21 @@ function text(body2, init2) {
     headers2.set("content-length", encoded.byteLength.toString());
     return new Response(encoded, {
       ...init2,
-      headers: headers2,
+      headers: headers2
     });
   }
   return new Response(body2, {
     ...init2,
-    headers: headers2,
+    headers: headers2
   });
 }
 function coalesce_to_error(err) {
-  return err instanceof Error ||
-    (err && /** @type {any} */ err.name && /** @type {any} */ err.message)
-    ? /** @type {Error} */
-      err
-    : new Error(JSON.stringify(err));
+  return err instanceof Error || err && /** @type {any} */
+  err.name && /** @type {any} */
+  err.message ? (
+    /** @type {Error} */
+    err
+  ) : new Error(JSON.stringify(err));
 }
 function normalize_error(error) {
   return (
@@ -184,16 +169,15 @@ function normalize_error(error) {
   );
 }
 function get_status(error) {
-  return error instanceof HttpError || error instanceof SvelteKitError
-    ? error.status
-    : 500;
+  return error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500;
 }
 function get_message(error) {
   return error instanceof SvelteKitError ? error.text : "Internal Error";
 }
 let public_env = {};
 let safe_public_env = {};
-function set_private_env(environment) {}
+function set_private_env(environment) {
+}
 function set_public_env(environment) {
   public_env = environment;
 }
@@ -206,8 +190,8 @@ function method_not_allowed(mod, method) {
     headers: {
       // https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
       // "The server must generate an Allow header field in a 405 status code response"
-      allow: allowed_methods(mod).join(", "),
-    },
+      allow: allowed_methods(mod).join(", ")
+    }
   });
 }
 function allowed_methods(mod) {
@@ -219,7 +203,7 @@ function static_error_page(options2, status, message) {
   let page2 = options2.templates.error({ status, message });
   return text(page2, {
     headers: { "content-type": "text/html; charset=utf-8" },
-    status,
+    status
   });
 }
 async function handle_fatal_error(event, options2, error) {
@@ -228,11 +212,11 @@ async function handle_fatal_error(event, options2, error) {
   const body2 = await handle_error_and_jsonify(event, options2, error);
   const type = negotiate(event.request.headers.get("accept") || "text/html", [
     "application/json",
-    "text/html",
+    "text/html"
   ]);
   if (event.isDataRequest || type === "application/json") {
     return json(body2, {
-      status,
+      status
     });
   }
   return static_error_page(options2, status, body2.message);
@@ -243,16 +227,12 @@ async function handle_error_and_jsonify(event, options2, error) {
   }
   const status = get_status(error);
   const message = get_message(error);
-  return (
-    (await options2.hooks.handleError({ error, event, status, message })) ?? {
-      message,
-    }
-  );
+  return await options2.hooks.handleError({ error, event, status, message }) ?? { message };
 }
 function redirect_response(status, location) {
   const response = new Response(void 0, {
     status,
-    headers: { location },
+    headers: { location }
   });
   return response;
 }
@@ -268,14 +248,10 @@ function clarify_devalue_error(event, error) {
 function stringify_uses(node) {
   const uses = [];
   if (node.uses && node.uses.dependencies.size > 0) {
-    uses.push(
-      `"dependencies":${JSON.stringify(Array.from(node.uses.dependencies))}`,
-    );
+    uses.push(`"dependencies":${JSON.stringify(Array.from(node.uses.dependencies))}`);
   }
   if (node.uses && node.uses.search_params.size > 0) {
-    uses.push(
-      `"search_params":${JSON.stringify(Array.from(node.uses.search_params))}`,
-    );
+    uses.push(`"search_params":${JSON.stringify(Array.from(node.uses.search_params))}`);
   }
   if (node.uses && node.uses.params.size > 0) {
     uses.push(`"params":${JSON.stringify(Array.from(node.uses.params))}`);
@@ -286,9 +262,10 @@ function stringify_uses(node) {
   return `"uses":{${uses.join(",")}}`;
 }
 async function render_endpoint(event, mod, state) {
-  const method =
+  const method = (
     /** @type {import('types').HttpMethod} */
-    event.request.method;
+    event.request.method
+  );
   let handler = mod[method] || mod.fallback;
   if (method === "HEAD" && mod.GET && !mod.HEAD) {
     handler = mod.GET;
@@ -310,18 +287,18 @@ async function render_endpoint(event, mod, state) {
   try {
     let response = await handler(
       /** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */
-      event,
+      event
     );
     if (!(response instanceof Response)) {
       throw new Error(
-        `Invalid response from route ${event.url.pathname}: handler should return a Response object`,
+        `Invalid response from route ${event.url.pathname}: handler should return a Response object`
       );
     }
     if (state.prerendering) {
       response = new Response(response.body, {
         status: response.status,
         statusText: response.statusText,
-        headers: new Headers(response.headers),
+        headers: new Headers(response.headers)
       });
       response.headers.set("x-sveltekit-prerender", String(prerender));
     }
@@ -330,7 +307,7 @@ async function render_endpoint(event, mod, state) {
     if (e instanceof Redirect) {
       return new Response(void 0, {
         status: e.status,
-        headers: { location: e.location },
+        headers: { location: e.location }
       });
     }
     throw e;
@@ -341,15 +318,14 @@ function is_endpoint_request(event) {
   if (ENDPOINT_METHODS.includes(method) && !PAGE_METHODS.includes(method)) {
     return true;
   }
-  if (method === "POST" && headers2.get("x-sveltekit-action") === "true")
-    return false;
+  if (method === "POST" && headers2.get("x-sveltekit-action") === "true") return false;
   const accept = event.request.headers.get("accept") ?? "*/*";
   return negotiate(accept, ["*", "text/html"]) !== "text/html";
 }
 function compact(arr) {
   return arr.filter(
     /** @returns {val is NonNullable<T>} */
-    (val) => val != null,
+    (val) => val != null
   );
 }
 const internal = new URL("sveltekit-internal://");
@@ -357,9 +333,7 @@ function resolve(base2, path) {
   if (path[0] === "/" && path[1] === "/") return path;
   let url = new URL(base2, internal);
   url = new URL(path, url);
-  return url.protocol === internal.protocol
-    ? url.pathname + url.search + url.hash
-    : url.href;
+  return url.protocol === internal.protocol ? url.pathname + url.search + url.hash : url.href;
 }
 function normalize_path(path, trailing_slash) {
   if (path === "/" || trailing_slash === "ignore") return path;
@@ -379,9 +353,16 @@ function decode_params(params) {
   }
   return params;
 }
-const tracked_url_properties =
+const tracked_url_properties = (
   /** @type {const} */
-  ["href", "pathname", "search", "toString", "toJSON"];
+  [
+    "href",
+    "pathname",
+    "search",
+    "toString",
+    "toJSON"
+  ]
+);
 function make_trackable(url, callback, search_params_callback) {
   const tracked = new URL(url);
   Object.defineProperty(tracked, "searchParams", {
@@ -396,10 +377,10 @@ function make_trackable(url, callback, search_params_callback) {
         callback();
         const value = Reflect.get(obj, key2);
         return typeof value === "function" ? value.bind(obj) : value;
-      },
+      }
     }),
     enumerable: true,
-    configurable: true,
+    configurable: true
   });
   for (const property of tracked_url_properties) {
     Object.defineProperty(tracked, property, {
@@ -408,22 +389,14 @@ function make_trackable(url, callback, search_params_callback) {
         return url[property];
       },
       enumerable: true,
-      configurable: true,
+      configurable: true
     });
   }
   {
-    tracked[Symbol.for("nodejs.util.inspect.custom")] = (
-      depth,
-      opts,
-      inspect,
-    ) => {
+    tracked[Symbol.for("nodejs.util.inspect.custom")] = (depth, opts, inspect) => {
       return inspect(url, opts);
     };
-    tracked.searchParams[Symbol.for("nodejs.util.inspect.custom")] = (
-      depth,
-      opts,
-      inspect,
-    ) => {
+    tracked.searchParams[Symbol.for("nodejs.util.inspect.custom")] = (depth, opts, inspect) => {
       return inspect(url.searchParams, opts);
     };
   }
@@ -437,9 +410,9 @@ function disable_hash(url) {
   Object.defineProperty(url, "hash", {
     get() {
       throw new Error(
-        "Cannot access event.url.hash. Consider using `$page.url.hash` inside a component instead",
+        "Cannot access event.url.hash. Consider using `$page.url.hash` inside a component instead"
       );
-    },
+    }
   });
 }
 function disable_search(url) {
@@ -447,10 +420,8 @@ function disable_search(url) {
   for (const property of ["search", "searchParams"]) {
     Object.defineProperty(url, property, {
       get() {
-        throw new Error(
-          `Cannot access url.${property} on a page with prerendering enabled`,
-        );
-      },
+        throw new Error(`Cannot access url.${property} on a page with prerendering enabled`);
+      }
     });
   }
 }
@@ -467,8 +438,7 @@ function has_data_suffix(pathname) {
   return pathname.endsWith(DATA_SUFFIX) || pathname.endsWith(HTML_DATA_SUFFIX);
 }
 function add_data_suffix(pathname) {
-  if (pathname.endsWith(".html"))
-    return pathname.replace(/\.html$/, HTML_DATA_SUFFIX);
+  if (pathname.endsWith(".html")) return pathname.replace(/\.html$/, HTML_DATA_SUFFIX);
   return pathname.replace(/\/$/, "") + DATA_SUFFIX;
 }
 function strip_data_suffix(pathname) {
@@ -480,7 +450,7 @@ function strip_data_suffix(pathname) {
 function is_action_json_request(event) {
   const accept = negotiate(event.request.headers.get("accept") ?? "*/*", [
     "application/json",
-    "text/html",
+    "text/html"
   ]);
   return accept === "application/json" && event.request.method === "POST";
 }
@@ -490,31 +460,27 @@ async function handle_action_json_request(event, options2, server) {
     const no_actions_error = new SvelteKitError(
       405,
       "Method Not Allowed",
-      "POST method not allowed. No actions exist for this page",
+      "POST method not allowed. No actions exist for this page"
     );
     return action_json(
       {
         type: "error",
-        error: await handle_error_and_jsonify(
-          event,
-          options2,
-          no_actions_error,
-        ),
+        error: await handle_error_and_jsonify(event, options2, no_actions_error)
       },
       {
         status: no_actions_error.status,
         headers: {
           // https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
           // "The server must generate an Allow header field in a 405 status code response"
-          allow: "GET",
-        },
-      },
+          allow: "GET"
+        }
+      }
     );
   }
   check_named_default_separate(actions);
   try {
     const data = await call_action(event, actions);
-    if (false);
+    if (false) ;
     if (data instanceof ActionFailure) {
       return action_json({
         type: "failure",
@@ -525,8 +491,8 @@ async function handle_action_json_request(event, options2, server) {
         data: stringify_action_response(
           data.data,
           /** @type {string} */
-          event.route.id,
-        ),
+          event.route.id
+        )
       });
     } else {
       return action_json({
@@ -536,8 +502,8 @@ async function handle_action_json_request(event, options2, server) {
         data: stringify_action_response(
           data,
           /** @type {string} */
-          event.route.id,
-        ),
+          event.route.id
+        )
       });
     }
   } catch (e) {
@@ -548,28 +514,22 @@ async function handle_action_json_request(event, options2, server) {
     return action_json(
       {
         type: "error",
-        error: await handle_error_and_jsonify(
-          event,
-          options2,
-          check_incorrect_fail_use(err),
-        ),
+        error: await handle_error_and_jsonify(event, options2, check_incorrect_fail_use(err))
       },
       {
-        status: get_status(err),
-      },
+        status: get_status(err)
+      }
     );
   }
 }
 function check_incorrect_fail_use(error) {
-  return error instanceof ActionFailure
-    ? new Error('Cannot "throw fail()". Use "return fail()"')
-    : error;
+  return error instanceof ActionFailure ? new Error('Cannot "throw fail()". Use "return fail()"') : error;
 }
 function action_json_redirect(redirect) {
   return action_json({
     type: "redirect",
     status: redirect.status,
-    location: redirect.location,
+    location: redirect.location
   });
 }
 function action_json(data, init2) {
@@ -584,33 +544,33 @@ async function handle_action_request(event, server) {
     event.setHeaders({
       // https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
       // "The server must generate an Allow header field in a 405 status code response"
-      allow: "GET",
+      allow: "GET"
     });
     return {
       type: "error",
       error: new SvelteKitError(
         405,
         "Method Not Allowed",
-        "POST method not allowed. No actions exist for this page",
-      ),
+        "POST method not allowed. No actions exist for this page"
+      )
     };
   }
   check_named_default_separate(actions);
   try {
     const data = await call_action(event, actions);
-    if (false);
+    if (false) ;
     if (data instanceof ActionFailure) {
       return {
         type: "failure",
         status: data.status,
-        data: data.data,
+        data: data.data
       };
     } else {
       return {
         type: "success",
         status: 200,
         // @ts-expect-error this will be removed upon serialization, so `undefined` is the same as omission
-        data,
+        data
       };
     }
   } catch (e) {
@@ -619,19 +579,19 @@ async function handle_action_request(event, server) {
       return {
         type: "redirect",
         status: err.status,
-        location: err.location,
+        location: err.location
       };
     }
     return {
       type: "error",
-      error: check_incorrect_fail_use(err),
+      error: check_incorrect_fail_use(err)
     };
   }
 }
 function check_named_default_separate(actions) {
   if (actions.default && Object.keys(actions).length > 1) {
     throw new Error(
-      "When using named actions, the default action cannot be used. See the docs for more info: https://svelte.dev/docs/kit/form-actions#named-actions",
+      "When using named actions, the default action cannot be used. See the docs for more info: https://svelte.dev/docs/kit/form-actions#named-actions"
     );
   }
 }
@@ -649,33 +609,25 @@ async function call_action(event, actions) {
   }
   const action = actions[name];
   if (!action) {
-    throw new SvelteKitError(
-      404,
-      "Not Found",
-      `No action with name '${name}' found`,
-    );
+    throw new SvelteKitError(404, "Not Found", `No action with name '${name}' found`);
   }
   if (!is_form_content_type(event.request)) {
     throw new SvelteKitError(
       415,
       "Unsupported Media Type",
       `Form actions expect form-encoded data — received ${event.request.headers.get(
-        "content-type",
-      )}`,
+        "content-type"
+      )}`
     );
   }
   return action(event);
 }
 function validate_action_return(data) {
   if (data instanceof Redirect) {
-    throw new Error(
-      "Cannot `return redirect(...)` — use `redirect(...)` instead",
-    );
+    throw new Error("Cannot `return redirect(...)` — use `redirect(...)` instead");
   }
   if (data instanceof HttpError) {
-    throw new Error(
-      "Cannot `return error(...)` — use `error(...)` or `return fail(...)` instead",
-    );
+    throw new Error("Cannot `return error(...)` — use `error(...)` or `return fail(...)` instead");
   }
 }
 function uneval_action_response(data, route_id) {
@@ -688,12 +640,13 @@ function try_deserialize(data, fn, route_id) {
   try {
     return fn(data);
   } catch (e) {
-    const error =
+    const error = (
       /** @type {any} */
-      e;
+      e
+    );
     if (data instanceof Response) {
       throw new Error(
-        `Data returned from action inside ${route_id} is not serializable. Form actions need to return plain objects or fail(). E.g. return { success: true } or return fail(400, { message: "invalid" });`,
+        `Data returned from action inside ${route_id} is not serializable. Form actions need to return plain objects or fail(). E.g. return { success: true } or return fail(400, { message: "invalid" });`
       );
     }
     if ("path" in error) {
@@ -713,8 +666,8 @@ function b64_encode(buffer) {
   const little_endian = new Uint8Array(new Uint16Array([1]).buffer)[0] > 0;
   return btoa(
     new TextDecoder(little_endian ? "utf-16le" : "utf-16be").decode(
-      new Uint16Array(new Uint8Array(buffer)),
-    ),
+      new Uint16Array(new Uint8Array(buffer))
+    )
   );
 }
 async function load_server_data({ event, state, node, parent }) {
@@ -726,7 +679,7 @@ async function load_server_data({ event, state, node, parent }) {
     parent: false,
     route: false,
     url: false,
-    search_params: /* @__PURE__ */ new Set(),
+    search_params: /* @__PURE__ */ new Set()
   };
   const url = make_trackable(
     event.url,
@@ -739,7 +692,7 @@ async function load_server_data({ event, state, node, parent }) {
       if (is_tracking) {
         uses.search_params.add(param);
       }
-    },
+    }
   );
   if (state.prerendering) {
     disable_search(url);
@@ -762,11 +715,11 @@ async function load_server_data({ event, state, node, parent }) {
         if (is_tracking) {
           uses.params.add(key2);
         }
-        return (
+        return target[
           /** @type {string} */
-          target[key2]
-        );
-      },
+          key2
+        ];
+      }
     }),
     parent: async () => {
       if (is_tracking) {
@@ -779,11 +732,11 @@ async function load_server_data({ event, state, node, parent }) {
         if (is_tracking) {
           uses.route = true;
         }
-        return (
+        return target[
           /** @type {'id'} */
-          target[key2]
-        );
-      },
+          key2
+        ];
+      }
     }),
     url,
     untrack(fn) {
@@ -793,13 +746,13 @@ async function load_server_data({ event, state, node, parent }) {
       } finally {
         is_tracking = true;
       }
-    },
+    }
   });
   return {
     type: "data",
     data: result ?? null,
     uses,
-    slash: node.server.trailingSlash,
+    slash: node.server.trailingSlash
   };
 }
 async function load_data({
@@ -810,7 +763,7 @@ async function load_data({
   server_data_promise,
   state,
   resolve_opts,
-  csr,
+  csr
 }) {
   const server_data_node = await server_data_promise;
   if (!node?.universal?.load) {
@@ -823,25 +776,19 @@ async function load_data({
     route: event.route,
     fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
     setHeaders: event.setHeaders,
-    depends: () => {},
+    depends: () => {
+    },
     parent,
-    untrack: (fn) => fn(),
+    untrack: (fn) => fn()
   });
   return result ?? null;
 }
 function create_universal_fetch(event, state, fetched, csr, resolve_opts) {
   const universal_fetch = async (input, init2) => {
-    const cloned_body =
-      input instanceof Request && input.body ? input.clone().body : null;
-    const cloned_headers =
-      input instanceof Request && [...input.headers].length
-        ? new Headers(input.headers)
-        : init2?.headers;
+    const cloned_body = input instanceof Request && input.body ? input.clone().body : null;
+    const cloned_headers = input instanceof Request && [...input.headers].length ? new Headers(input.headers) : init2?.headers;
     let response = await event.fetch(input, init2);
-    const url = new URL(
-      input instanceof Request ? input.url : input,
-      event.url,
-    );
+    const url = new URL(input instanceof Request ? input.url : input, event.url);
     const same_origin = url.origin === event.url.origin;
     let dependency;
     if (same_origin) {
@@ -850,19 +797,18 @@ function create_universal_fetch(event, state, fetched, csr, resolve_opts) {
         state.prerendering.dependencies.set(url.pathname, dependency);
       }
     } else {
-      const mode =
-        input instanceof Request ? input.mode : init2?.mode ?? "cors";
+      const mode = input instanceof Request ? input.mode : init2?.mode ?? "cors";
       if (mode === "no-cors") {
         response = new Response("", {
           status: response.status,
           statusText: response.statusText,
-          headers: response.headers,
+          headers: response.headers
         });
       } else {
         const acao = response.headers.get("access-control-allow-origin");
-        if (!acao || (acao !== event.url.origin && acao !== "*")) {
+        if (!acao || acao !== event.url.origin && acao !== "*") {
           throw new Error(
-            `CORS error: ${acao ? "Incorrect" : "No"} 'Access-Control-Allow-Origin' header is present on the requested resource`,
+            `CORS error: ${acao ? "Incorrect" : "No"} 'Access-Control-Allow-Origin' header is present on the requested resource`
           );
         }
       }
@@ -873,23 +819,20 @@ function create_universal_fetch(event, state, fetched, csr, resolve_opts) {
           const status_number = Number(response2.status);
           if (isNaN(status_number)) {
             throw new Error(
-              `response.status is not a number. value: "${response2.status}" type: ${typeof response2.status}`,
+              `response.status is not a number. value: "${response2.status}" type: ${typeof response2.status}`
             );
           }
           fetched.push({
-            url: same_origin
-              ? url.href.slice(event.url.origin.length)
-              : url.href,
+            url: same_origin ? url.href.slice(event.url.origin.length) : url.href,
             method: event.request.method,
-            request_body:
+            request_body: (
               /** @type {string | ArrayBufferView | undefined} */
-              input instanceof Request && cloned_body
-                ? await stream_to_string(cloned_body)
-                : init2?.body,
+              input instanceof Request && cloned_body ? await stream_to_string(cloned_body) : init2?.body
+            ),
             request_headers: cloned_headers,
             response_body: body2,
             response: response2,
-            is_b64,
+            is_b64
           });
         }
         if (key2 === "arrayBuffer") {
@@ -923,7 +866,7 @@ function create_universal_fetch(event, state, fetched, csr, resolve_opts) {
           };
         }
         return Reflect.get(response2, key2, response2);
-      },
+      }
     });
     if (csr) {
       const get2 = response.headers.get;
@@ -931,13 +874,10 @@ function create_universal_fetch(event, state, fetched, csr, resolve_opts) {
         const lower = key2.toLowerCase();
         const value = get2.call(response.headers, lower);
         if (value && !lower.startsWith("x-sveltekit-")) {
-          const included = resolve_opts.filterSerializedResponseHeaders(
-            lower,
-            value,
-          );
+          const included = resolve_opts.filterSerializedResponseHeaders(lower, value);
           if (!included) {
             throw new Error(
-              `Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://svelte.dev/docs/kit/hooks#Server-hooks-handle (at ${event.route.id})`,
+              `Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://svelte.dev/docs/kit/hooks#Server-hooks-handle (at ${event.route.id})`
             );
           }
         }
@@ -948,7 +888,8 @@ function create_universal_fetch(event, state, fetched, csr, resolve_opts) {
   };
   return (input, init2) => {
     const response = universal_fetch(input, init2);
-    response.catch(() => {});
+    response.catch(() => {
+    });
     return response;
   };
 }
@@ -969,7 +910,8 @@ var is_array = Array.isArray;
 var array_from = Array.from;
 var define_property = Object.defineProperty;
 var get_descriptor = Object.getOwnPropertyDescriptor;
-const noop = () => {};
+const noop = () => {
+};
 function is_promise(value) {
   return typeof value?.then === "function";
 }
@@ -979,23 +921,19 @@ function run_all(arr) {
   }
 }
 function fallback(value, fallback2, lazy = false) {
-  return value === void 0
-    ? lazy
-      ? /** @type {() => V} */
-        fallback2()
-      : /** @type {V} */
-        fallback2
-    : value;
+  return value === void 0 ? lazy ? (
+    /** @type {() => V} */
+    fallback2()
+  ) : (
+    /** @type {V} */
+    fallback2
+  ) : value;
 }
 function equals(value) {
   return value === this.v;
 }
 function safe_not_equal(a, b) {
-  return a != a
-    ? b == b
-    : a !== b ||
-        (a !== null && typeof a === "object") ||
-        typeof a === "function";
+  return a != a ? b == b : a !== b || a !== null && typeof a === "object" || typeof a === "function";
 }
 function safe_equals(value) {
   return !safe_not_equal(value, this.v);
@@ -1043,7 +981,7 @@ function source(v) {
     v,
     reactions: null,
     equals,
-    version: 0,
+    version: 0
   };
 }
 // @__NO_SIDE_EFFECTS__
@@ -1058,13 +996,9 @@ function mutable_source(initial_value, immutable = false) {
   return s2;
 }
 function set(source2, value) {
-  if (
-    active_reaction !== null &&
-    is_runes() &&
-    (active_reaction.f & (DERIVED | BLOCK_EFFECT)) !== 0 && // If the source was created locally within the current derived, then
-    // we allow the mutation.
-    (derived_sources === null || !derived_sources.includes(source2))
-  ) {
+  if (active_reaction !== null && is_runes() && (active_reaction.f & (DERIVED | BLOCK_EFFECT)) !== 0 && // If the source was created locally within the current derived, then
+  // we allow the mutation.
+  (derived_sources === null || !derived_sources.includes(source2))) {
     state_unsafe_mutation();
   }
   return internal_set(source2, value);
@@ -1074,12 +1008,7 @@ function internal_set(source2, value) {
     source2.v = value;
     source2.version = increment_version();
     mark_reactions(source2, DIRTY);
-    if (
-      is_runes() &&
-      active_effect !== null &&
-      (active_effect.f & CLEAN) !== 0 &&
-      (active_effect.f & BRANCH_EFFECT) === 0
-    ) {
+    if (is_runes() && active_effect !== null && (active_effect.f & CLEAN) !== 0 && (active_effect.f & BRANCH_EFFECT) === 0) {
       if (new_deps !== null && new_deps.includes(source2)) {
         set_signal_status(active_effect, DIRTY);
         schedule_effect(active_effect);
@@ -1110,12 +1039,12 @@ function mark_reactions(signal, status) {
         mark_reactions(
           /** @type {Derived} */
           reaction,
-          MAYBE_DIRTY,
+          MAYBE_DIRTY
         );
       } else {
         schedule_effect(
           /** @type {Effect} */
-          reaction,
+          reaction
         );
       }
     }
@@ -1139,12 +1068,12 @@ function set_hydrate_node(node) {
     hydration_mismatch();
     throw HYDRATION_ERROR;
   }
-  return (hydrate_node = node);
+  return hydrate_node = node;
 }
 function hydrate_next() {
   return set_hydrate_node(
     /** @type {TemplateNode} */
-    /* @__PURE__ */ get_next_sibling(hydrate_node),
+    /* @__PURE__ */ get_next_sibling(hydrate_node)
   );
 }
 var $window;
@@ -1189,12 +1118,12 @@ function destroy_derived_children(derived2) {
       if ((child.f & DERIVED) !== 0) {
         destroy_derived(
           /** @type {Derived} */
-          child,
+          child
         );
       } else {
         destroy_effect(
           /** @type {Effect} */
-          child,
+          child
         );
       }
     }
@@ -1216,10 +1145,7 @@ function execute_derived(derived2) {
 }
 function update_derived(derived2) {
   var value = execute_derived(derived2);
-  var status =
-    (skip_reaction || (derived2.f & UNOWNED) !== 0) && derived2.deps !== null
-      ? MAYBE_DIRTY
-      : CLEAN;
+  var status = (skip_reaction || (derived2.f & UNOWNED) !== 0) && derived2.deps !== null ? MAYBE_DIRTY : CLEAN;
   set_signal_status(derived2, status);
   if (!derived2.equals(value)) {
     derived2.v = value;
@@ -1230,12 +1156,7 @@ function destroy_derived(signal) {
   destroy_derived_children(signal);
   remove_reactions(signal, 0);
   set_signal_status(signal, DESTROYED);
-  signal.v =
-    signal.children =
-    signal.deps =
-    signal.ctx =
-    signal.reactions =
-      null;
+  signal.v = signal.children = signal.deps = signal.ctx = signal.reactions = null;
 }
 function push_effect(effect2, parent_effect) {
   var parent_last = parent_effect.last;
@@ -1265,7 +1186,7 @@ function create_effect(type, fn, sync, push2 = true) {
     prev: null,
     teardown: null,
     transitions: null,
-    version: 0,
+    version: 0
   };
   if (sync) {
     var previously_flushing_effect = is_flushing_effect;
@@ -1282,21 +1203,16 @@ function create_effect(type, fn, sync, push2 = true) {
   } else if (fn !== null) {
     schedule_effect(effect2);
   }
-  var inert =
-    sync &&
-    effect2.deps === null &&
-    effect2.first === null &&
-    effect2.nodes_start === null &&
-    effect2.teardown === null &&
-    (effect2.f & EFFECT_HAS_DERIVED) === 0;
+  var inert = sync && effect2.deps === null && effect2.first === null && effect2.nodes_start === null && effect2.teardown === null && (effect2.f & EFFECT_HAS_DERIVED) === 0;
   if (!inert && !is_root && push2) {
     if (parent_effect !== null) {
       push_effect(effect2, parent_effect);
     }
     if (active_reaction !== null && (active_reaction.f & DERIVED) !== 0) {
-      var derived2 =
+      var derived2 = (
         /** @type {Derived} */
-        active_reaction;
+        active_reaction
+      );
       (derived2.children ??= []).push(effect2);
     }
   }
@@ -1356,18 +1272,14 @@ function destroy_block_effect_children(signal) {
 }
 function destroy_effect(effect2, remove_dom = true) {
   var removed = false;
-  if (
-    (remove_dom || (effect2.f & HEAD_EFFECT) !== 0) &&
-    effect2.nodes_start !== null
-  ) {
+  if ((remove_dom || (effect2.f & HEAD_EFFECT) !== 0) && effect2.nodes_start !== null) {
     var node = effect2.nodes_start;
     var end = effect2.nodes_end;
     while (node !== null) {
-      var next =
-        node === end
-          ? null
-          : /** @type {TemplateNode} */
-            /* @__PURE__ */ get_next_sibling(node);
+      var next = node === end ? null : (
+        /** @type {TemplateNode} */
+        /* @__PURE__ */ get_next_sibling(node)
+      );
       node.remove();
       node = next;
     }
@@ -1388,16 +1300,7 @@ function destroy_effect(effect2, remove_dom = true) {
   if (parent !== null && parent.first !== null) {
     unlink_effect(effect2);
   }
-  effect2.next =
-    effect2.prev =
-    effect2.teardown =
-    effect2.ctx =
-    effect2.deps =
-    effect2.parent =
-    effect2.fn =
-    effect2.nodes_start =
-    effect2.nodes_end =
-      null;
+  effect2.next = effect2.prev = effect2.teardown = effect2.ctx = effect2.deps = effect2.parent = effect2.fn = effect2.nodes_start = effect2.nodes_end = null;
 }
 function unlink_effect(effect2) {
   var parent = effect2.parent;
@@ -1410,7 +1313,8 @@ function unlink_effect(effect2) {
     if (parent.last === effect2) parent.last = prev;
   }
 }
-function flush_tasks() {}
+function flush_tasks() {
+}
 function lifecycle_outside_component(name) {
   {
     throw new Error("lifecycle_outside_component");
@@ -1469,23 +1373,16 @@ function check_dirtiness(reaction) {
       }
       for (i = 0; i < dependencies.length; i++) {
         var dependency = dependencies[i];
-        if (
-          check_dirtiness(
-            /** @type {Derived} */
-            dependency,
-          )
-        ) {
+        if (check_dirtiness(
+          /** @type {Derived} */
+          dependency
+        )) {
           update_derived(
             /** @type {Derived} */
-            dependency,
+            dependency
           );
         }
-        if (
-          is_unowned &&
-          active_effect !== null &&
-          !skip_reaction &&
-          !dependency?.reactions?.includes(reaction)
-        ) {
+        if (is_unowned && active_effect !== null && !skip_reaction && !dependency?.reactions?.includes(reaction)) {
           (dependency.reactions ??= []).push(reaction);
         }
         if (dependency.version > reaction.version) {
@@ -1513,18 +1410,19 @@ function update_reaction(reaction) {
   var prev_derived_sources = derived_sources;
   var previous_component_context = component_context;
   var flags = reaction.f;
-  new_deps = /** @type {null | Value[]} */ null;
+  new_deps = /** @type {null | Value[]} */
+  null;
   skipped_deps = 0;
   untracked_writes = null;
-  active_reaction =
-    (flags & (BRANCH_EFFECT | ROOT_EFFECT)) === 0 ? reaction : null;
+  active_reaction = (flags & (BRANCH_EFFECT | ROOT_EFFECT)) === 0 ? reaction : null;
   skip_reaction = !is_flushing_effect && (flags & UNOWNED) !== 0;
   derived_sources = null;
   component_context = reaction.ctx;
   try {
-    var result =
+    var result = (
       /** @type {Function} */
-      (0, reaction.fn)();
+      (0, reaction.fn)()
+    );
     var deps = reaction.deps;
     if (new_deps !== null) {
       var i;
@@ -1571,13 +1469,10 @@ function remove_reaction(signal, dependency) {
       }
     }
   }
-  if (
-    reactions === null &&
-    (dependency.f & DERIVED) !== 0 && // Destroying a child effect while updating a parent effect can cause a dependency to appear
-    // to be unused, when in fact it is used by the currently-updating parent. Checking `new_deps`
-    // allows us to skip the expensive work of disconnecting and immediately reconnecting it
-    (new_deps === null || !new_deps.includes(dependency))
-  ) {
+  if (reactions === null && (dependency.f & DERIVED) !== 0 && // Destroying a child effect while updating a parent effect can cause a dependency to appear
+  // to be unused, when in fact it is used by the currently-updating parent. Checking `new_deps`
+  // allows us to skip the expensive work of disconnecting and immediately reconnecting it
+  (new_deps === null || !new_deps.includes(dependency))) {
     set_signal_status(dependency, MAYBE_DIRTY);
     if ((dependency.f & (UNOWNED | DISCONNECTED)) === 0) {
       dependency.f ^= DISCONNECTED;
@@ -1585,7 +1480,7 @@ function remove_reaction(signal, dependency) {
     remove_reactions(
       /** @type {Derived} **/
       dependency,
-      0,
+      0
     );
   }
 }
@@ -1615,11 +1510,11 @@ function update_effect(effect2) {
     var teardown = update_reaction(effect2);
     effect2.teardown = typeof teardown === "function" ? teardown : null;
     effect2.version = current_version;
-    if (DEV);
+    if (DEV) ;
   } catch (error) {
     handle_error(
       /** @type {Error} */
-      error,
+      error
     );
   } finally {
     active_effect = previous_effect;
@@ -1663,11 +1558,7 @@ function flush_queued_effects(effects) {
     var effect2 = effects[i];
     if ((effect2.f & (DESTROYED | INERT)) === 0 && check_dirtiness(effect2)) {
       update_effect(effect2);
-      if (
-        effect2.deps === null &&
-        effect2.first === null &&
-        effect2.nodes_start === null
-      ) {
+      if (effect2.deps === null && effect2.first === null && effect2.nodes_start === null) {
         if (effect2.teardown === null) {
           unlink_effect(effect2);
         } else {
@@ -1769,7 +1660,7 @@ function flush_sync(fn) {
       flush_sync();
     }
     flush_count = 0;
-    if (DEV);
+    if (DEV) ;
     return result;
   } finally {
     scheduler_mode = previous_scheduler_mode;
@@ -1782,11 +1673,11 @@ function get$1(signal) {
   if (is_derived && (flags & DESTROYED) !== 0) {
     var value = execute_derived(
       /** @type {Derived} */
-      signal,
+      signal
     );
     destroy_derived(
       /** @type {Derived} */
-      signal,
+      signal
     );
     return value;
   }
@@ -1802,27 +1693,24 @@ function get$1(signal) {
     } else {
       new_deps.push(signal);
     }
-    if (
-      untracked_writes !== null &&
-      active_effect !== null &&
-      (active_effect.f & CLEAN) !== 0 &&
-      (active_effect.f & BRANCH_EFFECT) === 0 &&
-      untracked_writes.includes(signal)
-    ) {
+    if (untracked_writes !== null && active_effect !== null && (active_effect.f & CLEAN) !== 0 && (active_effect.f & BRANCH_EFFECT) === 0 && untracked_writes.includes(signal)) {
       set_signal_status(active_effect, DIRTY);
       schedule_effect(active_effect);
     }
-  } else if (is_derived && /** @type {Derived} */ signal.deps === null) {
-    var derived2 =
+  } else if (is_derived && /** @type {Derived} */
+  signal.deps === null) {
+    var derived2 = (
       /** @type {Derived} */
-      signal;
+      signal
+    );
     var parent = derived2.parent;
     if (parent !== null && !parent.deriveds?.includes(derived2)) {
       (parent.deriveds ??= []).push(derived2);
     }
   }
   if (is_derived) {
-    derived2 = /** @type {Derived} */ signal;
+    derived2 = /** @type {Derived} */
+    signal;
     if (check_dirtiness(derived2)) {
       update_derived(derived2);
     }
@@ -1840,7 +1728,7 @@ function untrack(fn) {
 }
 const STATUS_MASK = ~(DIRTY | MAYBE_DIRTY | CLEAN);
 function set_signal_status(signal, status) {
-  signal.f = (signal.f & STATUS_MASK) | status;
+  signal.f = signal.f & STATUS_MASK | status;
 }
 function push$1(props, runes = false, fn) {
   component_context = {
@@ -1850,14 +1738,14 @@ function push$1(props, runes = false, fn) {
     m: false,
     s: props,
     x: null,
-    l: null,
+    l: null
   };
   if (!runes) {
     component_context.l = {
       s: null,
       u: null,
       r1: [],
-      r2: source(false),
+      r2: source(false)
     };
   }
 }
@@ -1893,23 +1781,22 @@ const all_registered_events = /* @__PURE__ */ new Set();
 const root_event_handles = /* @__PURE__ */ new Set();
 function handle_event_propagation(event) {
   var handler_element = this;
-  var owner_document =
+  var owner_document = (
     /** @type {Node} */
-    handler_element.ownerDocument;
+    handler_element.ownerDocument
+  );
   var event_name = event.type;
   var path = event.composedPath?.() || [];
-  var current_target =
+  var current_target = (
     /** @type {null | Element} */
-    path[0] || event.target;
+    path[0] || event.target
+  );
   var path_idx = 0;
   var handled_at = event.__root;
   if (handled_at) {
     var at_idx = path.indexOf(handled_at);
-    if (
-      at_idx !== -1 &&
-      (handler_element === document ||
-        handler_element === /** @type {any} */ window)
-    ) {
+    if (at_idx !== -1 && (handler_element === document || handler_element === /** @type {any} */
+    window)) {
       event.__root = handler_element;
       return;
     }
@@ -1921,13 +1808,14 @@ function handle_event_propagation(event) {
       path_idx = at_idx;
     }
   }
-  current_target = /** @type {Element} */ path[path_idx] || event.target;
+  current_target = /** @type {Element} */
+  path[path_idx] || event.target;
   if (current_target === handler_element) return;
   define_property(event, "currentTarget", {
     configurable: true,
     get() {
       return current_target || owner_document;
-    },
+    }
   });
   var previous_reaction = active_reaction;
   var previous_effect = active_effect;
@@ -1937,18 +1825,12 @@ function handle_event_propagation(event) {
     var throw_error;
     var other_errors = [];
     while (current_target !== null) {
-      var parent_element =
-        current_target.assignedSlot ||
-        current_target.parentNode ||
-        /** @type {any} */
-        current_target.host ||
-        null;
+      var parent_element = current_target.assignedSlot || current_target.parentNode || /** @type {any} */
+      current_target.host || null;
       try {
         var delegated = current_target["__" + event_name];
-        if (
-          delegated !== void 0 &&
-          !(/** @type {any} */ current_target.disabled)
-        ) {
+        if (delegated !== void 0 && !/** @type {any} */
+        current_target.disabled) {
           if (is_array(delegated)) {
             var [fn, ...data] = delegated;
             fn.apply(current_target, [event, ...data]);
@@ -1963,11 +1845,7 @@ function handle_event_propagation(event) {
           throw_error = error;
         }
       }
-      if (
-        event.cancelBubble ||
-        parent_element === handler_element ||
-        parent_element === null
-      ) {
+      if (event.cancelBubble || parent_element === handler_element || parent_element === null) {
         break;
       }
       current_target = parent_element;
@@ -1988,9 +1866,10 @@ function handle_event_propagation(event) {
   }
 }
 function assign_nodes(start, end) {
-  var effect2 =
+  var effect2 = (
     /** @type {Effect} */
-    active_effect;
+    active_effect
+  );
   if (effect2.nodes_start === null) {
     effect2.nodes_start = start;
     effect2.nodes_end = end;
@@ -2010,18 +1889,14 @@ function hydrate(component, options2) {
   const was_hydrating = hydrating;
   const previous_hydrate_node = hydrate_node;
   try {
-    var anchor =
+    var anchor = (
       /** @type {TemplateNode} */
-      /* @__PURE__ */ get_first_child(target);
-    while (
-      anchor &&
-      (anchor.nodeType !== 8 ||
-        /** @type {Comment} */
-        anchor.data !== HYDRATION_START)
-    ) {
-      anchor =
-        /** @type {TemplateNode} */
-        /* @__PURE__ */ get_next_sibling(anchor);
+      /* @__PURE__ */ get_first_child(target)
+    );
+    while (anchor && (anchor.nodeType !== 8 || /** @type {Comment} */
+    anchor.data !== HYDRATION_START)) {
+      anchor = /** @type {TemplateNode} */
+      /* @__PURE__ */ get_next_sibling(anchor);
     }
     if (!anchor) {
       throw HYDRATION_ERROR;
@@ -2029,16 +1904,12 @@ function hydrate(component, options2) {
     set_hydrating(true);
     set_hydrate_node(
       /** @type {Comment} */
-      anchor,
+      anchor
     );
     hydrate_next();
     const instance = _mount(component, { ...options2, anchor });
-    if (
-      hydrate_node === null ||
-      hydrate_node.nodeType !== 8 ||
-      /** @type {Comment} */
-      hydrate_node.data !== HYDRATION_END
-    ) {
+    if (hydrate_node === null || hydrate_node.nodeType !== 8 || /** @type {Comment} */
+    hydrate_node.data !== HYDRATION_END) {
       hydration_mismatch();
       throw HYDRATION_ERROR;
     }
@@ -2064,10 +1935,7 @@ function hydrate(component, options2) {
   }
 }
 const document_listeners = /* @__PURE__ */ new Map();
-function _mount(
-  Component,
-  { target, anchor, props = {}, events, context, intro = true },
-) {
+function _mount(Component, { target, anchor, props = {}, events, context, intro = true }) {
   init_operations();
   var registered_events = /* @__PURE__ */ new Set();
   var event_handle = (events2) => {
@@ -2076,14 +1944,10 @@ function _mount(
       if (registered_events.has(event_name)) continue;
       registered_events.add(event_name);
       var passive = is_passive_event(event_name);
-      target.addEventListener(event_name, handle_event_propagation, {
-        passive,
-      });
+      target.addEventListener(event_name, handle_event_propagation, { passive });
       var n = document_listeners.get(event_name);
       if (n === void 0) {
-        document.addEventListener(event_name, handle_event_propagation, {
-          passive,
-        });
+        document.addEventListener(event_name, handle_event_propagation, { passive });
         document_listeners.set(event_name, 1);
       } else {
         document_listeners.set(event_name, n + 1);
@@ -2098,9 +1962,10 @@ function _mount(
     branch(() => {
       if (context) {
         push$1({});
-        var ctx =
+        var ctx = (
           /** @type {ComponentContext} */
-          component_context;
+          component_context
+        );
         ctx.c = context;
       }
       if (events) {
@@ -2110,7 +1975,7 @@ function _mount(
         assign_nodes(
           /** @type {TemplateNode} */
           anchor_node,
-          null,
+          null
         );
       }
       component = Component(anchor_node, props) || {};
@@ -2124,9 +1989,10 @@ function _mount(
     return () => {
       for (var event_name of registered_events) {
         target.removeEventListener(event_name, handle_event_propagation);
-        var n =
+        var n = (
           /** @type {number} */
-          document_listeners.get(event_name);
+          document_listeners.get(event_name)
+        );
         if (--n === 0) {
           document.removeEventListener(event_name, handle_event_propagation);
           document_listeners.delete(event_name);
@@ -2157,7 +2023,7 @@ function asClassComponent$1(component) {
     constructor(options2) {
       super({
         component,
-        ...options2,
+        ...options2
       });
     }
   };
@@ -2180,31 +2046,27 @@ class Svelte4Component {
       return s2;
     };
     const props = new Proxy(
-      { ...(options2.props || {}), $$events: {} },
+      { ...options2.props || {}, $$events: {} },
       {
         get(target, prop) {
-          return get$1(
-            sources.get(prop) ?? add_source(prop, Reflect.get(target, prop)),
-          );
+          return get$1(sources.get(prop) ?? add_source(prop, Reflect.get(target, prop)));
         },
         has(target, prop) {
-          get$1(
-            sources.get(prop) ?? add_source(prop, Reflect.get(target, prop)),
-          );
+          get$1(sources.get(prop) ?? add_source(prop, Reflect.get(target, prop)));
           return Reflect.has(target, prop);
         },
         set(target, prop, value) {
           set(sources.get(prop) ?? add_source(prop, value), value);
           return Reflect.set(target, prop, value);
-        },
-      },
+        }
+      }
     );
     this.#instance = (options2.hydrate ? hydrate : mount)(options2.component, {
       target: options2.target,
       props,
       context: options2.context,
       intro: options2.intro ?? false,
-      recover: options2.recover,
+      recover: options2.recover
     });
     if (!options2?.props?.$$host || options2.sync === false) {
       flush_sync();
@@ -2220,14 +2082,13 @@ class Svelte4Component {
         set(value) {
           this.#instance[key2] = value;
         },
-        enumerable: true,
+        enumerable: true
       });
     }
-    this.#instance.$set =
-      /** @param {Record<string, any>} next */
-      (next) => {
-        Object.assign(props, next);
-      };
+    this.#instance.$set = /** @param {Record<string, any>} next */
+    (next) => {
+      Object.assign(props, next);
+    };
     this.#instance.$destroy = () => {
       unmount(this.#instance);
     };
@@ -2248,7 +2109,7 @@ class Svelte4Component {
     return () => {
       this.#events[event] = this.#events[event].filter(
         /** @param {any} fn */
-        (fn) => fn !== cb,
+        (fn) => fn !== cb
       );
     };
   }
@@ -2262,19 +2123,19 @@ function subscribe_to_store(store, run, invalidate) {
     if (invalidate) invalidate(void 0);
     return noop;
   }
-  const unsub = untrack(() =>
-    store.subscribe(
+  const unsub = untrack(
+    () => store.subscribe(
       run,
       // @ts-expect-error
-      invalidate,
-    ),
+      invalidate
+    )
   );
   return unsub.unsubscribe ? () => unsub.unsubscribe() : unsub;
 }
 const subscriber_queue = [];
 function readable(value, start) {
   return {
-    subscribe: writable(value, start).subscribe,
+    subscribe: writable(value, start).subscribe
   };
 }
 function writable(value, start = noop) {
@@ -2299,12 +2160,10 @@ function writable(value, start = noop) {
     }
   }
   function update(fn) {
-    set2(
-      fn(
-        /** @type {T} */
-        value,
-      ),
-    );
+    set2(fn(
+      /** @type {T} */
+      value
+    ));
   }
   function subscribe(run, invalidate = noop) {
     const subscriber = [run, invalidate];
@@ -2314,7 +2173,7 @@ function writable(value, start = noop) {
     }
     run(
       /** @type {T} */
-      value,
+      value
     );
     return () => {
       subscribers.delete(subscriber);
@@ -2350,8 +2209,8 @@ function derived(stores, fn, initial_value) {
         cleanup = typeof result === "function" ? result : noop;
       }
     };
-    const unsubscribers = stores_array.map((store, i) =>
-      subscribe_to_store(
+    const unsubscribers = stores_array.map(
+      (store, i) => subscribe_to_store(
         store,
         (value) => {
           values[i] = value;
@@ -2362,8 +2221,8 @@ function derived(stores, fn, initial_value) {
         },
         () => {
           pending |= 1 << i;
-        },
-      ),
+        }
+      )
     );
     started = true;
     sync();
@@ -2379,15 +2238,11 @@ function hash(...values) {
   for (const value of values) {
     if (typeof value === "string") {
       let i = value.length;
-      while (i) hash2 = (hash2 * 33) ^ value.charCodeAt(--i);
+      while (i) hash2 = hash2 * 33 ^ value.charCodeAt(--i);
     } else if (ArrayBuffer.isView(value)) {
-      const buffer = new Uint8Array(
-        value.buffer,
-        value.byteOffset,
-        value.byteLength,
-      );
+      const buffer = new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
       let i = buffer.length;
-      while (i) hash2 = (hash2 * 33) ^ buffer[--i];
+      while (i) hash2 = hash2 * 33 ^ buffer[--i];
     } else {
       throw new TypeError("value must be a string or TypedArray");
     }
@@ -2396,12 +2251,12 @@ function hash(...values) {
 }
 const escape_html_attr_dict = {
   "&": "&amp;",
-  '"': "&quot;",
+  '"': "&quot;"
 };
 const escape_html_attr_regex = new RegExp(
   // special characters
   `[${Object.keys(escape_html_attr_dict).join("")}]|[\\ud800-\\udbff](?![\\udc00-\\udfff])|[\\ud800-\\udbff][\\udc00-\\udfff]|[\\udc00-\\udfff]`,
-  "g",
+  "g"
 );
 function escape_html_attr(str) {
   const escaped_str = str.replace(escape_html_attr_regex, (match) => {
@@ -2415,7 +2270,7 @@ function escape_html_attr(str) {
 const replacements$1 = {
   "<": "\\u003C",
   "\u2028": "\\u2028",
-  "\u2029": "\\u2029",
+  "\u2029": "\\u2029"
 };
 const pattern = new RegExp(`[${Object.keys(replacements$1).join("")}]`, "g");
 function serialize_data(fetched, filter, prerendering2 = false) {
@@ -2435,16 +2290,13 @@ function serialize_data(fetched, filter, prerendering2 = false) {
     status: fetched.response.status,
     statusText: fetched.response.statusText,
     headers: headers2,
-    body: fetched.response_body,
+    body: fetched.response_body
   };
-  const safe_payload = JSON.stringify(payload).replace(
-    pattern,
-    (match) => replacements$1[match],
-  );
+  const safe_payload = JSON.stringify(payload).replace(pattern, (match) => replacements$1[match]);
   const attrs = [
     'type="application/json"',
     "data-sveltekit-fetched",
-    `data-url=${escape_html_attr(fetched.url)}`,
+    `data-url=${escape_html_attr(fetched.url)}`
   ];
   if (fetched.is_b64) {
     attrs.push("data-b64");
@@ -2460,9 +2312,7 @@ function serialize_data(fetched, filter, prerendering2 = false) {
     attrs.push(`data-hash="${hash(...values)}"`);
   }
   if (!prerendering2 && fetched.method === "GET" && cache_control && !varyAny) {
-    const match =
-      /s-maxage=(\d+)/g.exec(cache_control) ??
-      /max-age=(\d+)/g.exec(cache_control);
+    const match = /s-maxage=(\d+)/g.exec(cache_control) ?? /max-age=(\d+)/g.exec(cache_control);
     if (match) {
       const ttl = +match[1] - +(age ?? "0");
       attrs.push(`data-ttl="${ttl}"`);
@@ -2493,52 +2343,28 @@ function sha256(data) {
       if (i2 < 16) {
         tmp = w[i2];
       } else {
-        a = w[(i2 + 1) & 15];
-        b = w[(i2 + 14) & 15];
-        tmp = w[i2 & 15] =
-          (((a >>> 7) ^ (a >>> 18) ^ (a >>> 3) ^ (a << 25) ^ (a << 14)) +
-            ((b >>> 17) ^ (b >>> 19) ^ (b >>> 10) ^ (b << 15) ^ (b << 13)) +
-            w[i2 & 15] +
-            w[(i2 + 9) & 15]) |
-          0;
+        a = w[i2 + 1 & 15];
+        b = w[i2 + 14 & 15];
+        tmp = w[i2 & 15] = (a >>> 7 ^ a >>> 18 ^ a >>> 3 ^ a << 25 ^ a << 14) + (b >>> 17 ^ b >>> 19 ^ b >>> 10 ^ b << 15 ^ b << 13) + w[i2 & 15] + w[i2 + 9 & 15] | 0;
       }
-      tmp =
-        tmp +
-        out7 +
-        ((out4 >>> 6) ^
-          (out4 >>> 11) ^
-          (out4 >>> 25) ^
-          (out4 << 26) ^
-          (out4 << 21) ^
-          (out4 << 7)) +
-        (out6 ^ (out4 & (out5 ^ out6))) +
-        key[i2];
+      tmp = tmp + out7 + (out4 >>> 6 ^ out4 >>> 11 ^ out4 >>> 25 ^ out4 << 26 ^ out4 << 21 ^ out4 << 7) + (out6 ^ out4 & (out5 ^ out6)) + key[i2];
       out7 = out6;
       out6 = out5;
       out5 = out4;
-      out4 = (out3 + tmp) | 0;
+      out4 = out3 + tmp | 0;
       out3 = out2;
       out2 = out1;
       out1 = out0;
-      out0 =
-        (tmp +
-          ((out1 & out2) ^ (out3 & (out1 ^ out2))) +
-          ((out1 >>> 2) ^
-            (out1 >>> 13) ^
-            (out1 >>> 22) ^
-            (out1 << 30) ^
-            (out1 << 19) ^
-            (out1 << 10))) |
-        0;
+      out0 = tmp + (out1 & out2 ^ out3 & (out1 ^ out2)) + (out1 >>> 2 ^ out1 >>> 13 ^ out1 >>> 22 ^ out1 << 30 ^ out1 << 19 ^ out1 << 10) | 0;
     }
-    out[0] = (out[0] + out0) | 0;
-    out[1] = (out[1] + out1) | 0;
-    out[2] = (out[2] + out2) | 0;
-    out[3] = (out[3] + out3) | 0;
-    out[4] = (out[4] + out4) | 0;
-    out[5] = (out[5] + out5) | 0;
-    out[6] = (out[6] + out6) | 0;
-    out[7] = (out[7] + out7) | 0;
+    out[0] = out[0] + out0 | 0;
+    out[1] = out[1] + out1 | 0;
+    out[2] = out[2] + out2 | 0;
+    out[3] = out[3] + out3 | 0;
+    out[4] = out[4] + out4 | 0;
+    out[5] = out[5] + out5 | 0;
+    out[6] = out[6] + out6 | 0;
+    out[7] = out[7] + out7 | 0;
   }
   const bytes = new Uint8Array(out.buffer);
   reverse_endianness(bytes);
@@ -2593,16 +2419,15 @@ function encode(str) {
   words[words.length - 1] = length;
   return words;
 }
-const chars =
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".split("");
+const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".split("");
 function base64(bytes) {
   const l = bytes.length;
   let result = "";
   let i;
   for (i = 2; i < l; i += 3) {
     result += chars[bytes[i - 2] >> 2];
-    result += chars[((bytes[i - 2] & 3) << 4) | (bytes[i - 1] >> 4)];
-    result += chars[((bytes[i - 1] & 15) << 2) | (bytes[i] >> 6)];
+    result += chars[(bytes[i - 2] & 3) << 4 | bytes[i - 1] >> 4];
+    result += chars[(bytes[i - 1] & 15) << 2 | bytes[i] >> 6];
     result += chars[bytes[i] & 63];
   }
   if (i === l + 1) {
@@ -2612,7 +2437,7 @@ function base64(bytes) {
   }
   if (i === l) {
     result += chars[bytes[i - 2] >> 2];
-    result += chars[((bytes[i - 2] & 3) << 4) | (bytes[i - 1] >> 4)];
+    result += chars[(bytes[i - 2] & 3) << 4 | bytes[i - 1] >> 4];
     result += chars[(bytes[i - 1] & 15) << 2];
     result += "=";
   }
@@ -2632,7 +2457,7 @@ const quoted = /* @__PURE__ */ new Set([
   "strict-dynamic",
   "report-sample",
   "wasm-unsafe-eval",
-  "script",
+  "script"
 ]);
 const crypto_pattern = /^(nonce|sha\d\d\d)-/;
 class BaseProvider {
@@ -2675,22 +2500,8 @@ class BaseProvider {
     const effective_style_src = d["style-src"] || d["default-src"];
     const style_src_attr = d["style-src-attr"];
     const style_src_elem = d["style-src-elem"];
-    this.#script_needs_csp =
-      (!!effective_script_src &&
-        effective_script_src.filter((value) => value !== "unsafe-inline")
-          .length > 0) ||
-      (!!script_src_elem &&
-        script_src_elem.filter((value) => value !== "unsafe-inline").length >
-          0);
-    this.#style_needs_csp =
-      (!!effective_style_src &&
-        effective_style_src.filter((value) => value !== "unsafe-inline")
-          .length > 0) ||
-      (!!style_src_attr &&
-        style_src_attr.filter((value) => value !== "unsafe-inline").length >
-          0) ||
-      (!!style_src_elem &&
-        style_src_elem.filter((value) => value !== "unsafe-inline").length > 0);
+    this.#script_needs_csp = !!effective_script_src && effective_script_src.filter((value) => value !== "unsafe-inline").length > 0 || !!script_src_elem && script_src_elem.filter((value) => value !== "unsafe-inline").length > 0;
+    this.#style_needs_csp = !!effective_style_src && effective_style_src.filter((value) => value !== "unsafe-inline").length > 0 || !!style_src_attr && style_src_attr.filter((value) => value !== "unsafe-inline").length > 0 || !!style_src_elem && style_src_elem.filter((value) => value !== "unsafe-inline").length > 0;
     this.script_needs_nonce = this.#script_needs_csp && !this.#use_hashes;
     this.style_needs_nonce = this.#style_needs_csp && !this.#use_hashes;
     this.#nonce = nonce;
@@ -2727,19 +2538,13 @@ class BaseProvider {
           this.#style_src_attr.push(`sha256-${hash2}`);
         }
         if (d["style-src-elem"]?.length) {
-          if (
-            hash2 !== empty_comment_hash &&
-            !d["style-src-elem"].includes(`sha256-${empty_comment_hash}`)
-          ) {
+          if (hash2 !== empty_comment_hash && !d["style-src-elem"].includes(`sha256-${empty_comment_hash}`)) {
             this.#style_src_elem.push(`sha256-${empty_comment_hash}`);
           }
           this.#style_src_elem.push(`sha256-${hash2}`);
         }
       } else {
-        if (
-          this.#style_src.length === 0 &&
-          !d["style-src"]?.includes("unsafe-inline")
-        ) {
+        if (this.#style_src.length === 0 && !d["style-src"]?.includes("unsafe-inline")) {
           this.#style_src.push(`nonce-${this.#nonce}`);
         }
         if (d["style-src-attr"]?.length) {
@@ -2762,46 +2567,42 @@ class BaseProvider {
     const directives = { ...this.#directives };
     if (this.#style_src.length > 0) {
       directives["style-src"] = [
-        ...(directives["style-src"] || directives["default-src"] || []),
-        ...this.#style_src,
+        ...directives["style-src"] || directives["default-src"] || [],
+        ...this.#style_src
       ];
     }
     if (this.#style_src_attr.length > 0) {
       directives["style-src-attr"] = [
-        ...(directives["style-src-attr"] || []),
-        ...this.#style_src_attr,
+        ...directives["style-src-attr"] || [],
+        ...this.#style_src_attr
       ];
     }
     if (this.#style_src_elem.length > 0) {
       directives["style-src-elem"] = [
-        ...(directives["style-src-elem"] || []),
-        ...this.#style_src_elem,
+        ...directives["style-src-elem"] || [],
+        ...this.#style_src_elem
       ];
     }
     if (this.#script_src.length > 0) {
       directives["script-src"] = [
-        ...(directives["script-src"] || directives["default-src"] || []),
-        ...this.#script_src,
+        ...directives["script-src"] || directives["default-src"] || [],
+        ...this.#script_src
       ];
     }
     if (this.#script_src_elem.length > 0) {
       directives["script-src-elem"] = [
-        ...(directives["script-src-elem"] || []),
-        ...this.#script_src_elem,
+        ...directives["script-src-elem"] || [],
+        ...this.#script_src_elem
       ];
     }
     for (const key2 in directives) {
-      if (
-        is_meta &&
-        (key2 === "frame-ancestors" ||
-          key2 === "report-uri" ||
-          key2 === "sandbox")
-      ) {
+      if (is_meta && (key2 === "frame-ancestors" || key2 === "report-uri" || key2 === "sandbox")) {
         continue;
       }
-      const value =
+      const value = (
         /** @type {string[] | true} */
-        directives[key2];
+        directives[key2]
+      );
       if (!value) continue;
       const directive = [key2];
       if (Array.isArray(value)) {
@@ -2840,7 +2641,7 @@ class CspReportOnlyProvider extends BaseProvider {
       const has_report_uri = directives["report-uri"]?.length ?? 0 > 0;
       if (!has_report_to && !has_report_uri) {
         throw Error(
-          "`content-security-policy-report-only` must be specified with either the `report-to` or `report-uri` directives, or both",
+          "`content-security-policy-report-only` must be specified with either the `report-to` or `report-uri` directives, or both"
         );
       }
     }
@@ -2858,25 +2659,15 @@ class Csp {
    * @param {import('./types.js').CspOpts} opts
    */
   constructor({ mode, directives, reportOnly }, { prerender }) {
-    const use_hashes = mode === "hash" || (mode === "auto" && prerender);
+    const use_hashes = mode === "hash" || mode === "auto" && prerender;
     this.csp_provider = new CspProvider(use_hashes, directives, this.nonce);
-    this.report_only_provider = new CspReportOnlyProvider(
-      use_hashes,
-      reportOnly,
-      this.nonce,
-    );
+    this.report_only_provider = new CspReportOnlyProvider(use_hashes, reportOnly, this.nonce);
   }
   get script_needs_nonce() {
-    return (
-      this.csp_provider.script_needs_nonce ||
-      this.report_only_provider.script_needs_nonce
-    );
+    return this.csp_provider.script_needs_nonce || this.report_only_provider.script_needs_nonce;
   }
   get style_needs_nonce() {
-    return (
-      this.csp_provider.style_needs_nonce ||
-      this.report_only_provider.style_needs_nonce
-    );
+    return this.csp_provider.style_needs_nonce || this.report_only_provider.style_needs_nonce;
   }
   /** @param {string} content */
   add_script(content) {
@@ -2908,25 +2699,25 @@ function create_async_iterator() {
             const next = await deferred[0].promise;
             if (!next.done) deferred.shift();
             return next;
-          },
+          }
         };
-      },
+      }
     },
     push: (value) => {
       deferred[deferred.length - 1].fulfil({
         value,
-        done: false,
+        done: false
       });
       deferred.push(defer());
     },
     done: () => {
       deferred[deferred.length - 1].fulfil({ done: true });
-    },
+    }
   };
 }
 const updated = {
   ...readable(false),
-  check: () => false,
+  check: () => false
 };
 const encoder$1 = new TextEncoder();
 async function render_response({
@@ -2940,18 +2731,14 @@ async function render_response({
   error = null,
   event,
   resolve_opts,
-  action_result,
+  action_result
 }) {
   if (state.prerendering) {
     if (options2.csp.mode === "nonce") {
-      throw new Error(
-        'Cannot use prerendering if config.kit.csp.mode === "nonce"',
-      );
+      throw new Error('Cannot use prerendering if config.kit.csp.mode === "nonce"');
     }
     if (options2.app_template_contains_nonce) {
-      throw new Error(
-        "Cannot use prerendering if page template contains %sveltekit.nonce%",
-      );
+      throw new Error("Cannot use prerendering if page template contains %sveltekit.nonce%");
     }
   }
   const { client } = manifest._;
@@ -2961,10 +2748,7 @@ async function render_response({
   const link_header_preloads = /* @__PURE__ */ new Set();
   const inline_styles = /* @__PURE__ */ new Map();
   let rendered;
-  const form_value =
-    action_result?.type === "success" || action_result?.type === "failure"
-      ? action_result.data ?? null
-      : null;
+  const form_value = action_result?.type === "success" || action_result?.type === "failure" ? action_result.data ?? null : null;
   let base$1 = base;
   let assets$1 = assets;
   let base_expression = s(base);
@@ -2972,7 +2756,7 @@ async function render_response({
     const segments = event.url.pathname.slice(base.length).split("/").slice(2);
     base$1 = segments.map(() => "..").join("/") || ".";
     base_expression = `new URL(${s(base$1)}, location).pathname.slice(0, -1)`;
-    if (!assets || (assets[0] === "/" && assets !== SVELTE_KIT_ASSETS)) {
+    if (!assets || assets[0] === "/" && assets !== SVELTE_KIT_ASSETS) {
       assets$1 = base$1;
     }
   }
@@ -2981,12 +2765,10 @@ async function render_response({
       stores: {
         page: writable(null),
         navigating: writable(null),
-        updated,
+        updated
       },
-      constructors: await Promise.all(
-        branch2.map(({ node }) => node.component()),
-      ),
-      form: form_value,
+      constructors: await Promise.all(branch2.map(({ node }) => node.component())),
+      form: form_value
     };
     let data2 = {};
     for (let i = 0; i < branch2.length; i += 1) {
@@ -2995,15 +2777,16 @@ async function render_response({
     }
     props.page = {
       error,
-      params:
+      params: (
         /** @type {Record<string, any>} */
-        event.params,
+        event.params
+      ),
       route: event.route,
       status,
       url: event.url,
       data: data2,
       form: form_value,
-      state: {},
+      state: {}
     };
     override({ base: base$1, assets: assets$1 });
     {
@@ -3018,9 +2801,7 @@ async function render_response({
       for (const url of node.stylesheets) stylesheets.add(url);
       for (const url of node.fonts) fonts.add(url);
       if (node.inline_styles) {
-        Object.entries(await node.inline_styles()).forEach(([k, v]) =>
-          inline_styles.set(k, v),
-        );
+        Object.entries(await node.inline_styles()).forEach(([k, v]) => inline_styles.set(k, v));
       }
     }
   } else {
@@ -3029,7 +2810,7 @@ async function render_response({
   let head = "";
   let body2 = rendered.html;
   const csp = new Csp(options2.csp, {
-    prerender: !!state.prerendering,
+    prerender: !!state.prerendering
   });
   const prefixed = (path) => {
     if (path.startsWith("/")) {
@@ -3053,9 +2834,7 @@ async function render_response({
     } else {
       if (resolve_opts.preload({ type: "css", path })) {
         const preload_atts = ['rel="preload"', 'as="style"'];
-        link_header_preloads.add(
-          `<${encodeURI(path)}>; ${preload_atts.join(";")}; nopush`,
-        );
+        link_header_preloads.add(`<${encodeURI(path)}>; ${preload_atts.join(";")}; nopush`);
       }
     }
     head += `
@@ -3070,7 +2849,7 @@ async function render_response({
         'as="font"',
         `type="font/${ext}"`,
         `href="${path}"`,
-        "crossorigin",
+        "crossorigin"
       ];
       head += `
 		<link ${attributes.join(" ")}>`;
@@ -3082,31 +2861,23 @@ async function render_response({
     options2,
     branch2.map((b) => b.server_data),
     csp,
-    global,
+    global
   );
   if (page_config.ssr && page_config.csr) {
     body2 += `
-			${fetched
-        .map((item) =>
-          serialize_data(
-            item,
-            resolve_opts.filterSerializedResponseHeaders,
-            !!state.prerendering,
-          ),
-        )
-        .join("\n			")}`;
+			${fetched.map(
+      (item) => serialize_data(item, resolve_opts.filterSerializedResponseHeaders, !!state.prerendering)
+    ).join("\n			")}`;
   }
   if (page_config.csr) {
     if (client.uses_env_dynamic_public && state.prerendering) {
       modulepreloads.add(`${options2.app_dir}/env.js`);
     }
-    const included_modulepreloads = Array.from(modulepreloads, (dep) =>
-      prefixed(dep),
-    ).filter((path) => resolve_opts.preload({ type: "js", path }));
+    const included_modulepreloads = Array.from(modulepreloads, (dep) => prefixed(dep)).filter(
+      (path) => resolve_opts.preload({ type: "js", path })
+    );
     for (const path of included_modulepreloads) {
-      link_header_preloads.add(
-        `<${encodeURI(path)}>; rel="modulepreload"; nopush`,
-      );
+      link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
       if (options2.preload_strategy !== "modulepreload") {
         head += `
 		<link rel="preload" as="script" crossorigin="anonymous" href="${path}">`;
@@ -3116,8 +2887,7 @@ async function render_response({
       }
     }
     const blocks = [];
-    const load_env_eagerly =
-      client.uses_env_dynamic_public && state.prerendering;
+    const load_env_eagerly = client.uses_env_dynamic_public && state.prerendering;
     const properties = [`base: ${base_expression}`];
     if (assets) {
       properties.push(`assets: ${s(assets)}`);
@@ -3150,7 +2920,7 @@ async function render_response({
         serialized.form = uneval_action_response(
           form_value,
           /** @type {string} */
-          event.route.id,
+          event.route.id
         );
       }
       if (error) {
@@ -3160,16 +2930,13 @@ async function render_response({
         `node_ids: [${branch2.map(({ node }) => node.index).join(", ")}]`,
         "data",
         `form: ${serialized.form}`,
-        `error: ${serialized.error}`,
+        `error: ${serialized.error}`
       ];
       if (status !== 200) {
         hydrate2.push(`status: ${status}`);
       }
       if (options2.embedded) {
-        hydrate2.push(
-          `params: ${devalue.uneval(event.params)}`,
-          `route: ${s(event.route)}`,
-        );
+        hydrate2.push(`params: ${devalue.uneval(event.params)}`, `route: ${s(event.route)}`);
       }
       const indent = "	".repeat(load_env_eagerly ? 7 : 6);
       args.push(`{
@@ -3216,7 +2983,7 @@ ${indent}}`);
   }
   const headers2 = new Headers({
     "x-sveltekit-page": "true",
-    "content-type": "text/html",
+    "content-type": "text/html"
   });
   if (state.prerendering) {
     const http_equiv = [];
@@ -3225,9 +2992,7 @@ ${indent}}`);
       http_equiv.push(csp_headers);
     }
     if (state.prerendering.cache) {
-      http_equiv.push(
-        `<meta http-equiv="cache-control" content="${state.prerendering.cache}">`,
-      );
+      http_equiv.push(`<meta http-equiv="cache-control" content="${state.prerendering.cache}">`);
     }
     if (http_equiv.length > 0) {
       head = http_equiv.join("\n") + head;
@@ -3250,39 +3015,37 @@ ${indent}}`);
     head,
     body: body2,
     assets: assets$1,
-    nonce:
+    nonce: (
       /** @type {string} */
-      csp.nonce,
-    env: safe_public_env,
+      csp.nonce
+    ),
+    env: safe_public_env
   });
-  const transformed =
-    (await resolve_opts.transformPageChunk({
-      html,
-      done: true,
-    })) || "";
+  const transformed = await resolve_opts.transformPageChunk({
+    html,
+    done: true
+  }) || "";
   if (!chunks) {
     headers2.set("etag", `"${hash(transformed)}"`);
   }
-  return !chunks
-    ? text(transformed, {
-        status,
-        headers: headers2,
-      })
-    : new Response(
-        new ReadableStream({
-          async start(controller) {
-            controller.enqueue(encoder$1.encode(transformed + "\n"));
-            for await (const chunk of chunks) {
-              controller.enqueue(encoder$1.encode(chunk));
-            }
-            controller.close();
-          },
-          type: "bytes",
-        }),
-        {
-          headers: headers2,
-        },
-      );
+  return !chunks ? text(transformed, {
+    status,
+    headers: headers2
+  }) : new Response(
+    new ReadableStream({
+      async start(controller) {
+        controller.enqueue(encoder$1.encode(transformed + "\n"));
+        for await (const chunk of chunks) {
+          controller.enqueue(encoder$1.encode(chunk));
+        }
+        controller.close();
+      },
+      type: "bytes"
+    }),
+    {
+      headers: headers2
+    }
+  );
 }
 function get_data(event, options2, nodes, csp, global) {
   let promise_id = 1;
@@ -3292,43 +3055,38 @@ function get_data(event, options2, nodes, csp, global) {
     if (typeof thing?.then === "function") {
       const id = promise_id++;
       count += 1;
-      thing
-        .then(
-          /** @param {any} data */
-          (data) => ({ data }),
-        )
-        .catch(
-          /** @param {any} error */
-          async (error) => ({
-            error: await handle_error_and_jsonify(event, options2, error),
-          }),
-        )
-        .then(
-          /**
-           * @param {{data: any; error: any}} result
-           */
-          async ({ data, error }) => {
-            count -= 1;
-            let str;
-            try {
-              str = devalue.uneval({ id, data, error }, replacer2);
-            } catch {
-              error = await handle_error_and_jsonify(
-                event,
-                options2,
-                new Error(
-                  `Failed to serialize promise while rendering ${event.route.id}`,
-                ),
-              );
-              data = void 0;
-              str = devalue.uneval({ id, data, error }, replacer2);
-            }
-            const nonce = csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : "";
-            push2(`<script${nonce}>${global}.resolve(${str})<\/script>
+      thing.then(
+        /** @param {any} data */
+        (data) => ({ data })
+      ).catch(
+        /** @param {any} error */
+        async (error) => ({
+          error: await handle_error_and_jsonify(event, options2, error)
+        })
+      ).then(
+        /**
+         * @param {{data: any; error: any}} result
+         */
+        async ({ data, error }) => {
+          count -= 1;
+          let str;
+          try {
+            str = devalue.uneval({ id, data, error }, replacer2);
+          } catch {
+            error = await handle_error_and_jsonify(
+              event,
+              options2,
+              new Error(`Failed to serialize promise while rendering ${event.route.id}`)
+            );
+            data = void 0;
+            str = devalue.uneval({ id, data, error }, replacer2);
+          }
+          const nonce = csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : "";
+          push2(`<script${nonce}>${global}.resolve(${str})<\/script>
 `);
-            if (count === 0) done();
-          },
-        );
+          if (count === 0) done();
+        }
+      );
       return `${global}.defer(${id})`;
     }
   }
@@ -3339,16 +3097,14 @@ function get_data(event, options2, nodes, csp, global) {
     });
     return {
       data: `[${strings.join(",")}]`,
-      chunks: count > 0 ? iterator : null,
+      chunks: count > 0 ? iterator : null
     };
   } catch (e) {
-    throw new Error(
-      clarify_devalue_error(
-        event,
-        /** @type {any} */
-        e,
-      ),
-    );
+    throw new Error(clarify_devalue_error(
+      event,
+      /** @type {any} */
+      e
+    ));
   }
 }
 function get_option(nodes, option) {
@@ -3360,7 +3116,7 @@ function get_option(nodes, option) {
       );
     },
     /** @type {Value | undefined} */
-    void 0,
+    void 0
   );
 }
 async function respond_with_error({
@@ -3370,14 +3126,14 @@ async function respond_with_error({
   state,
   status,
   error,
-  resolve_opts,
+  resolve_opts
 }) {
   if (event.request.headers.get("x-sveltekit-error")) {
     return static_error_page(
       options2,
       status,
       /** @type {Error} */
-      error.message,
+      error.message
     );
   }
   const fetched = [];
@@ -3393,7 +3149,7 @@ async function respond_with_error({
         state,
         node: default_layout,
         // eslint-disable-next-line @typescript-eslint/require-await
-        parent: async () => ({}),
+        parent: async () => ({})
       });
       const server_data = await server_data_promise;
       const data = await load_data({
@@ -3405,20 +3161,20 @@ async function respond_with_error({
         resolve_opts,
         server_data_promise,
         state,
-        csr,
+        csr
       });
       branch2.push(
         {
           node: default_layout,
           server_data,
-          data,
+          data
         },
         {
           node: await manifest._.nodes[1](),
           // 1 is always the root error
           data: null,
-          server_data: null,
-        },
+          server_data: null
+        }
       );
     }
     return await render_response({
@@ -3427,14 +3183,14 @@ async function respond_with_error({
       state,
       page_config: {
         ssr,
-        csr,
+        csr
       },
       status,
       error: await handle_error_and_jsonify(event, options2, error),
       branch: branch2,
       fetched,
       event,
-      resolve_opts,
+      resolve_opts
     });
   } catch (e) {
     if (e instanceof Redirect) {
@@ -3443,7 +3199,7 @@ async function respond_with_error({
     return static_error_page(
       options2,
       get_status(e),
-      (await handle_error_and_jsonify(event, options2, e)).message,
+      (await handle_error_and_jsonify(event, options2, e)).message
     );
   }
 }
@@ -3453,22 +3209,14 @@ function once(fn) {
   return () => {
     if (done) return result;
     done = true;
-    return (result = fn());
+    return result = fn();
   };
 }
 const encoder = new TextEncoder();
-async function render_data(
-  event,
-  route,
-  options2,
-  manifest,
-  state,
-  invalidated_data_nodes,
-  trailing_slash,
-) {
+async function render_data(event, route, options2, manifest, state, invalidated_data_nodes, trailing_slash) {
   if (!route.page) {
     return new Response(void 0, {
-      status: 404,
+      status: 404
     });
   }
   try {
@@ -3485,7 +3233,7 @@ async function render_data(
             return (
               /** @type {import('types').ServerDataSkippedNode} */
               {
-                type: "skip",
+                type: "skip"
               }
             );
           }
@@ -3497,15 +3245,16 @@ async function render_data(
             parent: async () => {
               const data2 = {};
               for (let j = 0; j < i; j += 1) {
-                const parent =
+                const parent = (
                   /** @type {import('types').ServerDataNode | null} */
-                  await functions[j]();
+                  await functions[j]()
+                );
                 if (parent) {
                   Object.assign(data2, parent.data);
                 }
               }
               return data2;
-            },
+            }
           });
         } catch (e) {
           aborted = true;
@@ -3518,7 +3267,7 @@ async function render_data(
         return (
           /** @type {import('types').ServerDataSkippedNode} */
           {
-            type: "skip",
+            type: "skip"
           }
         );
       }
@@ -3526,8 +3275,8 @@ async function render_data(
     });
     let length = promises.length;
     const nodes = await Promise.all(
-      promises.map((p, i) =>
-        p.catch(async (error) => {
+      promises.map(
+        (p, i) => p.catch(async (error) => {
           if (error instanceof Redirect) {
             throw error;
           }
@@ -3537,14 +3286,11 @@ async function render_data(
             {
               type: "error",
               error: await handle_error_and_jsonify(event, options2, error),
-              status:
-                error instanceof HttpError || error instanceof SvelteKitError
-                  ? error.status
-                  : void 0,
+              status: error instanceof HttpError || error instanceof SvelteKitError ? error.status : void 0
             }
           );
-        }),
-      ),
+        })
+      )
     );
     const { data, chunks } = get_data_json(event, options2, nodes);
     if (!chunks) {
@@ -3559,26 +3305,23 @@ async function render_data(
           }
           controller.close();
         },
-        type: "bytes",
+        type: "bytes"
       }),
       {
         headers: {
           // we use a proprietary content type to prevent buffering.
           // the `text` prefix makes it inspectable
           "content-type": "text/sveltekit-data",
-          "cache-control": "private, no-store",
-        },
-      },
+          "cache-control": "private, no-store"
+        }
+      }
     );
   } catch (e) {
     const error = normalize_error(e);
     if (error instanceof Redirect) {
       return redirect_json_response(error);
     } else {
-      return json_response(
-        await handle_error_and_jsonify(event, options2, error),
-        500,
-      );
+      return json_response(await handle_error_and_jsonify(event, options2, error), 500);
     }
   }
 }
@@ -3587,14 +3330,14 @@ function json_response(json2, status = 200) {
     status,
     headers: {
       "content-type": "application/json",
-      "cache-control": "private, no-store",
-    },
+      "cache-control": "private, no-store"
+    }
   });
 }
 function redirect_json_response(redirect) {
   return json_response({
     type: "redirect",
-    location: redirect.location,
+    location: redirect.location
   });
 }
 function get_data_json(event, options2, nodes) {
@@ -3608,45 +3351,41 @@ function get_data_json(event, options2, nodes) {
         const id = promise_id++;
         count += 1;
         let key2 = "data";
-        thing
-          .catch(
-            /** @param {any} e */
-            async (e) => {
-              key2 = "error";
-              return handle_error_and_jsonify(
+        thing.catch(
+          /** @param {any} e */
+          async (e) => {
+            key2 = "error";
+            return handle_error_and_jsonify(
+              event,
+              options2,
+              /** @type {any} */
+              e
+            );
+          }
+        ).then(
+          /** @param {any} value */
+          async (value) => {
+            let str;
+            try {
+              str = devalue.stringify(value, reducers);
+            } catch {
+              const error = await handle_error_and_jsonify(
                 event,
                 options2,
-                /** @type {any} */
-                e,
+                new Error(`Failed to serialize promise while rendering ${event.route.id}`)
               );
-            },
-          )
-          .then(
-            /** @param {any} value */
-            async (value) => {
-              let str;
-              try {
-                str = devalue.stringify(value, reducers);
-              } catch {
-                const error = await handle_error_and_jsonify(
-                  event,
-                  options2,
-                  new Error(
-                    `Failed to serialize promise while rendering ${event.route.id}`,
-                  ),
-                );
-                key2 = "error";
-                str = devalue.stringify(error, reducers);
-              }
-              count -= 1;
-              push2(`{"type":"chunk","id":${id},"${key2}":${str}}
+              key2 = "error";
+              str = devalue.stringify(error, reducers);
+            }
+            count -= 1;
+            push2(`{"type":"chunk","id":${id},"${key2}":${str}}
 `);
-              if (count === 0) done();
-            },
-          );
+            if (count === 0) done();
+          }
+        );
         return id;
       }
-    },
+    }
   };
   try {
     const strings = nodes.map((node) => {
@@ -3655,43 +3394,34 @@ function get_data_json(event, options2, nodes) {
         return JSON.stringify(node);
       }
       return `{"type":"data","data":${devalue.stringify(node.data, reducers)},${stringify_uses(
-        node,
+        node
       )}${node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ""}}`;
     });
     return {
       data: `{"type":"data","nodes":[${strings.join(",")}]}
 `,
-      chunks: count > 0 ? iterator : null,
+      chunks: count > 0 ? iterator : null
     };
   } catch (e) {
-    throw new Error(
-      clarify_devalue_error(
-        event,
-        /** @type {any} */
-        e,
-      ),
-    );
+    throw new Error(clarify_devalue_error(
+      event,
+      /** @type {any} */
+      e
+    ));
   }
 }
 function load_page_nodes(page2, manifest) {
   return Promise.all([
     // we use == here rather than === because [undefined] serializes as "[null]"
-    ...page2.layouts.map((n) => (n == void 0 ? n : manifest._.nodes[n]())),
-    manifest._.nodes[page2.leaf](),
+    ...page2.layouts.map((n) => n == void 0 ? n : manifest._.nodes[n]()),
+    manifest._.nodes[page2.leaf]()
   ]);
 }
 const MAX_DEPTH = 10;
-async function render_page(
-  event,
-  page2,
-  options2,
-  manifest,
-  state,
-  resolve_opts,
-) {
+async function render_page(event, page2, options2, manifest, state, resolve_opts) {
   if (state.depth > MAX_DEPTH) {
     return text(`Not found: ${event.url.pathname}`, {
-      status: 404,
+      status: 404
       // TODO in some cases this should be 500. not sure how to differentiate
     });
   }
@@ -3701,9 +3431,10 @@ async function render_page(
   }
   try {
     const nodes = await load_page_nodes(page2, manifest);
-    const leaf_node =
+    const leaf_node = (
       /** @type {import('types').SSRNode} */
-      nodes.at(-1);
+      nodes.at(-1)
+    );
     let status = 200;
     let action_result = void 0;
     if (is_action_request(event)) {
@@ -3728,26 +3459,19 @@ async function render_page(
       }
     } else if (state.prerendering) {
       return new Response(void 0, {
-        status: 204,
+        status: 204
       });
     }
     state.prerender_default = should_prerender;
     const fetched = [];
-    if (
-      get_option(nodes, "ssr") === false &&
-      !(state.prerendering && should_prerender_data)
-    ) {
-      if (
-        DEV &&
-        action_result &&
-        !event.request.headers.has("x-sveltekit-action")
-      );
+    if (get_option(nodes, "ssr") === false && !(state.prerendering && should_prerender_data)) {
+      if (DEV && action_result && !event.request.headers.has("x-sveltekit-action")) ;
       return await render_response({
         branch: [],
         fetched,
         page_config: {
           ssr: false,
-          csr: get_option(nodes, "csr") ?? true,
+          csr: get_option(nodes, "csr") ?? true
         },
         status,
         error: null,
@@ -3755,7 +3479,7 @@ async function render_page(
         options: options2,
         manifest,
         state,
-        resolve_opts,
+        resolve_opts
       });
     }
     const branch2 = [];
@@ -3780,10 +3504,11 @@ async function render_page(
                 if (parent) Object.assign(data, parent.data);
               }
               return data;
-            },
+            }
           });
         } catch (e) {
-          load_error = /** @type {Error} */ e;
+          load_error = /** @type {Error} */
+          e;
           throw load_error;
         }
       });
@@ -3807,16 +3532,19 @@ async function render_page(
             resolve_opts,
             server_data_promise: server_promises[i],
             state,
-            csr,
+            csr
           });
         } catch (e) {
-          load_error = /** @type {Error} */ e;
+          load_error = /** @type {Error} */
+          e;
           throw load_error;
         }
       });
     });
-    for (const p of server_promises) p.catch(() => {});
-    for (const p of load_promises) p.catch(() => {});
+    for (const p of server_promises) p.catch(() => {
+    });
+    for (const p of load_promises) p.catch(() => {
+    });
     for (let i = 0; i < nodes.length; i += 1) {
       const node = nodes[i];
       if (node) {
@@ -3830,11 +3558,11 @@ async function render_page(
             if (state.prerendering && should_prerender_data) {
               const body2 = JSON.stringify({
                 type: "redirect",
-                location: err.location,
+                location: err.location
               });
               state.prerendering.dependencies.set(data_pathname, {
                 response: text(body2),
-                body: body2,
+                body: body2
               });
             }
             return redirect_response(err.status, err.location);
@@ -3843,9 +3571,10 @@ async function render_page(
           const error = await handle_error_and_jsonify(event, options2, err);
           while (i--) {
             if (page2.errors[i]) {
-              const index =
+              const index = (
                 /** @type {number} */
-                page2.errors[i];
+                page2.errors[i]
+              );
               const node2 = await manifest._.nodes[index]();
               let j = i;
               while (!branch2[j]) j -= 1;
@@ -3861,9 +3590,9 @@ async function render_page(
                 branch: compact(branch2.slice(0, j + 1)).concat({
                   node: node2,
                   data: null,
-                  server_data: null,
+                  server_data: null
                 }),
-                fetched,
+                fetched
               });
             }
           }
@@ -3877,7 +3606,7 @@ async function render_page(
       let { data, chunks } = get_data_json(
         event,
         options2,
-        branch2.map((node) => node?.server_data),
+        branch2.map((node) => node?.server_data)
       );
       if (chunks) {
         for await (const chunk of chunks) {
@@ -3886,7 +3615,7 @@ async function render_page(
       }
       state.prerendering.dependencies.set(data_pathname, {
         response: text(data),
-        body: data,
+        body: data
       });
     }
     const ssr = get_option(nodes, "ssr") ?? true;
@@ -3898,13 +3627,13 @@ async function render_page(
       resolve_opts,
       page_config: {
         csr: get_option(nodes, "csr") ?? true,
-        ssr,
+        ssr
       },
       status,
       error: null,
       branch: ssr === false ? [] : compact(branch2),
       action_result,
-      fetched,
+      fetched
     });
   } catch (e) {
     return await respond_with_error({
@@ -3914,7 +3643,7 @@ async function render_page(
       state,
       status: 500,
       error: e,
-      resolve_opts,
+      resolve_opts
     });
   }
 }
@@ -3927,10 +3656,7 @@ function exec(match, params, matchers) {
     const param = params[i];
     let value = values[i - buffered];
     if (param.chained && param.rest && buffered) {
-      value = values
-        .slice(i - buffered, i + 1)
-        .filter((s2) => s2)
-        .join("/");
+      value = values.slice(i - buffered, i + 1).filter((s2) => s2).join("/");
       buffered = 0;
     }
     if (value === void 0) {
@@ -3941,20 +3667,10 @@ function exec(match, params, matchers) {
       result[param.name] = value;
       const next_param = params[i + 1];
       const next_value = values[i + 1];
-      if (
-        next_param &&
-        !next_param.rest &&
-        next_param.optional &&
-        next_value &&
-        param.chained
-      ) {
+      if (next_param && !next_param.rest && next_param.optional && next_value && param.chained) {
         buffered = 0;
       }
-      if (
-        !next_param &&
-        !next_value &&
-        Object.keys(result).length === values_needing_match.length
-      ) {
+      if (!next_param && !next_value && Object.keys(result).length === values_needing_match.length) {
         buffered = 0;
       }
       continue;
@@ -3970,9 +3686,7 @@ function exec(match, params, matchers) {
 }
 function validate_options(options2) {
   if (options2?.path === void 0) {
-    throw new Error(
-      "You must specify a `path` when setting, deleting or serializing cookies",
-    );
+    throw new Error("You must specify a `path` when setting, deleting or serializing cookies");
   }
 }
 function get_cookies(request, url, trailing_slash) {
@@ -3983,8 +3697,7 @@ function get_cookies(request, url, trailing_slash) {
   const defaults = {
     httpOnly: true,
     sameSite: "lax",
-    secure:
-      url.hostname === "localhost" && url.protocol === "http:" ? false : true,
+    secure: url.hostname === "localhost" && url.protocol === "http:" ? false : true
   };
   const cookies = {
     // The JSDoc param annotations appearing below for get, set and delete
@@ -3997,11 +3710,7 @@ function get_cookies(request, url, trailing_slash) {
      */
     get(name, opts) {
       const c = new_cookies[name];
-      if (
-        c &&
-        domain_matches(url.hostname, c.options.domain) &&
-        path_matches(url.pathname, c.options.path)
-      ) {
+      if (c && domain_matches(url.hostname, c.options.domain) && path_matches(url.pathname, c.options.path)) {
         return c.value;
       }
       const decoder = opts?.decode || decodeURIComponent;
@@ -4016,10 +3725,7 @@ function get_cookies(request, url, trailing_slash) {
       const decoder = opts?.decode || decodeURIComponent;
       const cookies2 = parse(header, { decode: decoder });
       for (const c of Object.values(new_cookies)) {
-        if (
-          domain_matches(url.hostname, c.options.domain) &&
-          path_matches(url.pathname, c.options.path)
-        ) {
+        if (domain_matches(url.hostname, c.options.domain) && path_matches(url.pathname, c.options.path)) {
           cookies2[c.name] = c.value;
         }
       }
@@ -4054,17 +3760,16 @@ function get_cookies(request, url, trailing_slash) {
         path = resolve(normalized_url, path);
       }
       return serialize(name, value, { ...defaults, ...options2, path });
-    },
+    }
   };
   function get_cookie_header(destination, header2) {
     const combined_cookies = {
       // cookies sent by the user agent have lowest precedence
-      ...initial_cookies,
+      ...initial_cookies
     };
     for (const key2 in new_cookies) {
       const cookie = new_cookies[key2];
-      if (!domain_matches(destination.hostname, cookie.options.domain))
-        continue;
+      if (!domain_matches(destination.hostname, cookie.options.domain)) continue;
       if (!path_matches(destination.pathname, cookie.options.path)) continue;
       const encoder2 = cookie.options.encode || encodeURIComponent;
       combined_cookies[cookie.name] = encoder2(cookie.value);
@@ -4075,9 +3780,7 @@ function get_cookies(request, url, trailing_slash) {
         combined_cookies[name] = parsed[name];
       }
     }
-    return Object.entries(combined_cookies)
-      .map(([name, value]) => `${name}=${value}`)
-      .join("; ");
+    return Object.entries(combined_cookies).map(([name, value]) => `${name}=${value}`).join("; ");
   }
   function set_internal(name, value, options2) {
     let path = options2.path;
@@ -4096,9 +3799,7 @@ function domain_matches(hostname, constraint) {
 }
 function path_matches(path, constraint) {
   if (!constraint) return true;
-  const normalized = constraint.endsWith("/")
-    ? constraint.slice(0, -1)
-    : constraint;
+  const normalized = constraint.endsWith("/") ? constraint.slice(0, -1) : constraint;
   if (path === normalized) return true;
   return path.startsWith(normalized + "/");
 }
@@ -4108,10 +3809,7 @@ function add_cookies_to_headers(headers2, cookies) {
     headers2.append("set-cookie", serialize(name, value, options2));
     if (options2.path.endsWith(".html")) {
       const path = add_data_suffix(options2.path);
-      headers2.append(
-        "set-cookie",
-        serialize(name, value, { ...options2, path }),
-      );
+      headers2.append("set-cookie", serialize(name, value, { ...options2, path }));
     }
   }
 }
@@ -4119,21 +3817,13 @@ let read_implementation = null;
 function set_read_implementation(fn) {
   read_implementation = fn;
 }
-function set_manifest(_) {}
-function create_fetch({
-  event,
-  options: options2,
-  manifest,
-  state,
-  get_cookie_header,
-  set_internal,
-}) {
+function set_manifest(_) {
+}
+function create_fetch({ event, options: options2, manifest, state, get_cookie_header, set_internal }) {
   const server_fetch = async (info, init2) => {
     const original_request = normalize_fetch_input(info, init2, event.url);
     let mode = (info instanceof Request ? info.mode : init2?.mode) ?? "cors";
-    let credentials =
-      (info instanceof Request ? info.credentials : init2?.credentials) ??
-      "same-origin";
+    let credentials = (info instanceof Request ? info.credentials : init2?.credentials) ?? "same-origin";
     return options2.hooks.handleFetch({
       event,
       request: original_request,
@@ -4144,52 +3834,31 @@ function create_fetch({
           request.headers.set("origin", event.url.origin);
         }
         if (info2 !== original_request) {
-          mode =
-            (info2 instanceof Request ? info2.mode : init3?.mode) ?? "cors";
-          credentials =
-            (info2 instanceof Request
-              ? info2.credentials
-              : init3?.credentials) ?? "same-origin";
+          mode = (info2 instanceof Request ? info2.mode : init3?.mode) ?? "cors";
+          credentials = (info2 instanceof Request ? info2.credentials : init3?.credentials) ?? "same-origin";
         }
-        if (
-          (request.method === "GET" || request.method === "HEAD") &&
-          ((mode === "no-cors" && url.origin !== event.url.origin) ||
-            url.origin === event.url.origin)
-        ) {
+        if ((request.method === "GET" || request.method === "HEAD") && (mode === "no-cors" && url.origin !== event.url.origin || url.origin === event.url.origin)) {
           request.headers.delete("origin");
         }
         if (url.origin !== event.url.origin) {
-          if (
-            `.${url.hostname}`.endsWith(`.${event.url.hostname}`) &&
-            credentials !== "omit"
-          ) {
-            const cookie = get_cookie_header(
-              url,
-              request.headers.get("cookie"),
-            );
+          if (`.${url.hostname}`.endsWith(`.${event.url.hostname}`) && credentials !== "omit") {
+            const cookie = get_cookie_header(url, request.headers.get("cookie"));
             if (cookie) request.headers.set("cookie", cookie);
           }
           return fetch(request);
         }
         const prefix = assets || base;
         const decoded = decodeURIComponent(url.pathname);
-        const filename = (
-          decoded.startsWith(prefix) ? decoded.slice(prefix.length) : decoded
-        ).slice(1);
+        const filename = (decoded.startsWith(prefix) ? decoded.slice(prefix.length) : decoded).slice(1);
         const filename_html = `${filename}/index.html`;
-        const is_asset =
-          manifest.assets.has(filename) || filename in manifest._.server_assets;
-        const is_asset_html =
-          manifest.assets.has(filename_html) ||
-          filename_html in manifest._.server_assets;
+        const is_asset = manifest.assets.has(filename) || filename in manifest._.server_assets;
+        const is_asset_html = manifest.assets.has(filename_html) || filename_html in manifest._.server_assets;
         if (is_asset || is_asset_html) {
           const file = is_asset ? filename : filename_html;
           if (state.read) {
-            const type = is_asset
-              ? manifest.mimeTypes[filename.slice(filename.lastIndexOf("."))]
-              : "text/html";
+            const type = is_asset ? manifest.mimeTypes[filename.slice(filename.lastIndexOf("."))] : "text/html";
             return new Response(state.read(file), {
-              headers: type ? { "content-type": type } : {},
+              headers: type ? { "content-type": type } : {}
             });
           } else if (read_implementation && file in manifest._.server_assets) {
             const length = manifest._.server_assets[file];
@@ -4197,8 +3866,8 @@ function create_fetch({
             return new Response(read_implementation(file), {
               headers: {
                 "Content-Length": "" + length,
-                "Content-Type": type,
-              },
+                "Content-Type": type
+              }
             });
           }
           return await fetch(request);
@@ -4220,40 +3889,36 @@ function create_fetch({
           request.headers.set(
             "accept-language",
             /** @type {string} */
-            event.request.headers.get("accept-language"),
+            event.request.headers.get("accept-language")
           );
         }
         const response = await respond(request, options2, manifest, {
           ...state,
-          depth: state.depth + 1,
+          depth: state.depth + 1
         });
         const set_cookie = response.headers.get("set-cookie");
         if (set_cookie) {
           for (const str of set_cookie_parser.splitCookiesString(set_cookie)) {
-            const { name, value, ...options3 } = set_cookie_parser.parseString(
-              str,
-              {
-                decodeValues: false,
-              },
-            );
-            const path =
-              options3.path ??
-              (url.pathname.split("/").slice(0, -1).join("/") || "/");
+            const { name, value, ...options3 } = set_cookie_parser.parseString(str, {
+              decodeValues: false
+            });
+            const path = options3.path ?? (url.pathname.split("/").slice(0, -1).join("/") || "/");
             set_internal(name, value, {
               path,
               encode: (value2) => value2,
               .../** @type {import('cookie').CookieSerializeOptions} */
-              options3,
+              options3
             });
           }
         }
         return response;
-      },
+      }
     });
   };
   return (input, init2) => {
     const response = server_fetch(input, init2);
-    response.catch(() => {});
+    response.catch(() => {
+    });
     return response;
   };
 }
@@ -4261,10 +3926,7 @@ function normalize_fetch_input(info, init2, url) {
   if (info instanceof Request) {
     return info;
   }
-  return new Request(
-    typeof info === "string" ? new URL(info, url) : info,
-    init2,
-  );
+  return new Request(typeof info === "string" ? new URL(info, url) : info, init2);
 }
 function validator(expected) {
   function validate(module, file) {
@@ -4272,12 +3934,8 @@ function validator(expected) {
     for (const key2 in module) {
       if (key2[0] === "_" || expected.has(key2)) continue;
       const values = [...expected.values()];
-      const hint =
-        hint_for_supported_files(key2, file?.slice(file.lastIndexOf("."))) ??
-        `valid exports are ${values.join(", ")}, or anything with a '_' prefix`;
-      throw new Error(
-        `Invalid export '${key2}'${file ? ` in ${file}` : ""} (${hint})`,
-      );
+      const hint = hint_for_supported_files(key2, file?.slice(file.lastIndexOf("."))) ?? `valid exports are ${values.join(", ")}, or anything with a '_' prefix`;
+      throw new Error(`Invalid export '${key2}'${file ? ` in ${file}` : ""} (${hint})`);
     }
   }
   return validate;
@@ -4309,20 +3967,11 @@ const valid_layout_exports = /* @__PURE__ */ new Set([
   "csr",
   "ssr",
   "trailingSlash",
-  "config",
+  "config"
 ]);
-const valid_page_exports = /* @__PURE__ */ new Set([
-  ...valid_layout_exports,
-  "entries",
-]);
-const valid_layout_server_exports = /* @__PURE__ */ new Set([
-  ...valid_layout_exports,
-]);
-const valid_page_server_exports = /* @__PURE__ */ new Set([
-  ...valid_layout_server_exports,
-  "actions",
-  "entries",
-]);
+const valid_page_exports = /* @__PURE__ */ new Set([...valid_layout_exports, "entries"]);
+const valid_layout_server_exports = /* @__PURE__ */ new Set([...valid_layout_exports]);
+const valid_page_server_exports = /* @__PURE__ */ new Set([...valid_layout_server_exports, "actions", "entries"]);
 const valid_server_exports = /* @__PURE__ */ new Set([
   "GET",
   "POST",
@@ -4335,7 +3984,7 @@ const valid_server_exports = /* @__PURE__ */ new Set([
   "prerender",
   "trailingSlash",
   "config",
-  "entries",
+  "entries"
 ]);
 const validate_layout_exports = validator(valid_layout_exports);
 const validate_page_exports = validator(valid_page_exports);
@@ -4350,7 +3999,7 @@ function get_public_env(request) {
   etag ??= `W/${Date.now()}`;
   headers ??= new Headers({
     "content-type": "application/javascript; charset=utf-8",
-    etag,
+    etag
   });
   if (request.headers.get("if-none-match") === etag) {
     return new Response(void 0, { status: 304, headers });
@@ -4364,7 +4013,7 @@ function get_page_config(nodes) {
     current = {
       ...current,
       ...node?.universal?.config,
-      ...node?.server?.config,
+      ...node?.server?.config
     };
   }
   return Object.keys(current).length ? current : void 0;
@@ -4373,25 +4022,15 @@ const default_transform = ({ html }) => html;
 const default_filter = () => false;
 const default_preload = ({ type }) => type === "js" || type === "css";
 const page_methods = /* @__PURE__ */ new Set(["GET", "HEAD", "POST"]);
-const allowed_page_methods = /* @__PURE__ */ new Set([
-  "GET",
-  "HEAD",
-  "OPTIONS",
-]);
+const allowed_page_methods = /* @__PURE__ */ new Set(["GET", "HEAD", "OPTIONS"]);
 async function respond(request, options2, manifest, state) {
   const url = new URL(request.url);
   if (options2.csrf_check_origin) {
-    const forbidden =
-      is_form_content_type(request) &&
-      (request.method === "POST" ||
-        request.method === "PUT" ||
-        request.method === "PATCH" ||
-        request.method === "DELETE") &&
-      request.headers.get("origin") !== url.origin;
+    const forbidden = is_form_content_type(request) && (request.method === "POST" || request.method === "PUT" || request.method === "PATCH" || request.method === "DELETE") && request.headers.get("origin") !== url.origin;
     if (forbidden) {
       const csrf_error = new HttpError(
         403,
-        `Cross-site ${request.method} form submissions are forbidden`,
+        `Cross-site ${request.method} form submissions are forbidden`
       );
       if (request.headers.get("accept") === "application/json") {
         return json(csrf_error.body, { status: csrf_error.status });
@@ -4401,11 +4040,10 @@ async function respond(request, options2, manifest, state) {
   }
   let rerouted_path;
   try {
-    rerouted_path =
-      options2.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
+    rerouted_path = options2.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
   } catch {
     return text("Internal Server Error", {
-      status: 500,
+      status: 500
     });
   }
   let decoded;
@@ -4434,14 +4072,9 @@ async function respond(request, options2, manifest, state) {
   let invalidated_data_nodes;
   if (is_data_request) {
     decoded = strip_data_suffix(decoded) || "/";
-    url.pathname =
-      strip_data_suffix(url.pathname) +
-        (url.searchParams.get(TRAILING_SLASH_PARAM) === "1" ? "/" : "") || "/";
+    url.pathname = strip_data_suffix(url.pathname) + (url.searchParams.get(TRAILING_SLASH_PARAM) === "1" ? "/" : "") || "/";
     url.searchParams.delete(TRAILING_SLASH_PARAM);
-    invalidated_data_nodes = url.searchParams
-      .get(INVALIDATED_PARAM)
-      ?.split("")
-      .map((node) => node === "1");
+    invalidated_data_nodes = url.searchParams.get(INVALIDATED_PARAM)?.split("").map((node) => node === "1");
     url.searchParams.delete(INVALIDATED_PARAM);
   }
   if (!state.prerendering?.fallback) {
@@ -4465,13 +4098,11 @@ async function respond(request, options2, manifest, state) {
     cookies: null,
     // @ts-expect-error
     fetch: null,
-    getClientAddress:
-      state.getClientAddress ||
-      (() => {
-        throw new Error(
-          `${"@sveltejs/adapter-static"} does not specify getClientAddress. Please raise an issue`,
-        );
-      }),
+    getClientAddress: state.getClientAddress || (() => {
+      throw new Error(
+        `${"@sveltejs/adapter-static"} does not specify getClientAddress. Please raise an issue`
+      );
+    }),
     locals: {},
     params,
     platform: state.platform,
@@ -4483,26 +4114,27 @@ async function respond(request, options2, manifest, state) {
         const value = new_headers[key2];
         if (lower === "set-cookie") {
           throw new Error(
-            "Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies",
+            "Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies"
           );
         } else if (lower in headers2) {
           throw new Error(`"${key2}" header is already set`);
         } else {
           headers2[lower] = value;
           if (state.prerendering && lower === "cache-control") {
-            state.prerendering.cache = /** @type {string} */ value;
+            state.prerendering.cache = /** @type {string} */
+            value;
           }
         }
       }
     },
     url,
     isDataRequest: is_data_request,
-    isSubRequest: state.depth > 0,
+    isSubRequest: state.depth > 0
   };
   let resolve_opts = {
     transformPageChunk: default_transform,
     filterSerializedResponseHeaders: default_filter,
-    preload: default_preload,
+    preload: default_preload
   };
   try {
     if (route) {
@@ -4510,29 +4142,25 @@ async function respond(request, options2, manifest, state) {
         trailing_slash = "always";
       } else if (route.page) {
         const nodes = await load_page_nodes(route.page, manifest);
-        if (DEV);
+        if (DEV) ;
         trailing_slash = get_option(nodes, "trailingSlash");
       } else if (route.endpoint) {
         const node = await route.endpoint();
         trailing_slash = node.trailingSlash;
-        if (DEV);
+        if (DEV) ;
       }
       if (!is_data_request) {
-        const normalized = normalize_path(
-          url.pathname,
-          trailing_slash ?? "never",
-        );
+        const normalized = normalize_path(url.pathname, trailing_slash ?? "never");
         if (normalized !== url.pathname && !state.prerendering?.fallback) {
           return new Response(void 0, {
             status: 308,
             headers: {
               "x-sveltekit-normalize": "1",
-              location:
+              location: (
                 // ensure paths starting with '//' are not treated as protocol-relative
-                (normalized.startsWith("//")
-                  ? url.origin + normalized
-                  : normalized) + (url.search === "?" ? "" : url.search),
-            },
+                (normalized.startsWith("//") ? url.origin + normalized : normalized) + (url.search === "?" ? "" : url.search)
+              )
+            }
           });
         }
       }
@@ -4558,11 +4186,14 @@ async function respond(request, options2, manifest, state) {
     } else if (state.emulator?.platform) {
       event.platform = await state.emulator.platform({
         config: {},
-        prerender: !!state.prerendering?.fallback,
+        prerender: !!state.prerendering?.fallback
       });
     }
-    const { cookies, new_cookies, get_cookie_header, set_internal } =
-      get_cookies(request, url, trailing_slash ?? "never");
+    const { cookies, new_cookies, get_cookie_header, set_internal } = get_cookies(
+      request,
+      url,
+      trailing_slash ?? "never"
+    );
     cookies_to_add = new_cookies;
     event.cookies = cookies;
     event.fetch = create_fetch({
@@ -4571,42 +4202,36 @@ async function respond(request, options2, manifest, state) {
       manifest,
       state,
       get_cookie_header,
-      set_internal,
+      set_internal
     });
     if (state.prerendering && !state.prerendering.fallback) disable_search(url);
     const response = await options2.hooks.handle({
       event,
-      resolve: (event2, opts) =>
-        resolve2(event2, opts).then((response2) => {
-          for (const key2 in headers2) {
-            const value = headers2[key2];
-            response2.headers.set(
-              key2,
-              /** @type {string} */
-              value,
-            );
-          }
-          add_cookies_to_headers(
-            response2.headers,
-            Object.values(cookies_to_add),
+      resolve: (event2, opts) => resolve2(event2, opts).then((response2) => {
+        for (const key2 in headers2) {
+          const value = headers2[key2];
+          response2.headers.set(
+            key2,
+            /** @type {string} */
+            value
           );
-          if (state.prerendering && event2.route.id !== null) {
-            response2.headers.set(
-              "x-sveltekit-routeid",
-              encodeURI(event2.route.id),
-            );
-          }
-          return response2;
-        }),
+        }
+        add_cookies_to_headers(response2.headers, Object.values(cookies_to_add));
+        if (state.prerendering && event2.route.id !== null) {
+          response2.headers.set("x-sveltekit-routeid", encodeURI(event2.route.id));
+        }
+        return response2;
+      })
     });
     if (response.status === 200 && response.headers.has("etag")) {
       let if_none_match_value = request.headers.get("if-none-match");
       if (if_none_match_value?.startsWith('W/"')) {
         if_none_match_value = if_none_match_value.substring(2);
       }
-      const etag2 =
+      const etag2 = (
         /** @type {string} */
-        response.headers.get("etag");
+        response.headers.get("etag")
+      );
       if (if_none_match_value === etag2) {
         const headers22 = new Headers({ etag: etag2 });
         for (const key2 of [
@@ -4615,37 +4240,31 @@ async function respond(request, options2, manifest, state) {
           "date",
           "expires",
           "vary",
-          "set-cookie",
+          "set-cookie"
         ]) {
           const value = response.headers.get(key2);
           if (value) headers22.set(key2, value);
         }
         return new Response(void 0, {
           status: 304,
-          headers: headers22,
+          headers: headers22
         });
       }
     }
     if (is_data_request && response.status >= 300 && response.status <= 308) {
       const location = response.headers.get("location");
       if (location) {
-        return redirect_json_response(
-          new Redirect(
-            /** @type {any} */
-            response.status,
-            location,
-          ),
-        );
+        return redirect_json_response(new Redirect(
+          /** @type {any} */
+          response.status,
+          location
+        ));
       }
     }
     return response;
   } catch (e) {
     if (e instanceof Redirect) {
-      const response = is_data_request
-        ? redirect_json_response(e)
-        : route?.page && is_action_json_request(event)
-          ? action_json_redirect(e)
-          : redirect_response(e.status, e.location);
+      const response = is_data_request ? redirect_json_response(e) : route?.page && is_action_json_request(event) ? action_json_redirect(e) : redirect_response(e.status, e.location);
       add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
       return response;
     }
@@ -4656,9 +4275,8 @@ async function respond(request, options2, manifest, state) {
       if (opts) {
         resolve_opts = {
           transformPageChunk: opts.transformPageChunk || default_transform,
-          filterSerializedResponseHeaders:
-            opts.filterSerializedResponseHeaders || default_filter,
-          preload: opts.preload || default_preload,
+          filterSerializedResponseHeaders: opts.filterSerializedResponseHeaders || default_filter,
+          preload: opts.preload || default_preload
         };
       }
       if (state.prerendering?.fallback) {
@@ -4672,13 +4290,14 @@ async function respond(request, options2, manifest, state) {
           error: null,
           branch: [],
           fetched: [],
-          resolve_opts,
+          resolve_opts
         });
       }
       if (route) {
-        const method =
+        const method = (
           /** @type {import('types').HttpMethod} */
-          event2.request.method;
+          event2.request.method
+        );
         let response;
         if (is_data_request) {
           response = await render_data(
@@ -4688,27 +4307,13 @@ async function respond(request, options2, manifest, state) {
             manifest,
             state,
             invalidated_data_nodes,
-            trailing_slash ?? "never",
+            trailing_slash ?? "never"
           );
-        } else if (
-          route.endpoint &&
-          (!route.page || is_endpoint_request(event2))
-        ) {
-          response = await render_endpoint(
-            event2,
-            await route.endpoint(),
-            state,
-          );
+        } else if (route.endpoint && (!route.page || is_endpoint_request(event2))) {
+          response = await render_endpoint(event2, await route.endpoint(), state);
         } else if (route.page) {
           if (page_methods.has(method)) {
-            response = await render_page(
-              event2,
-              route.page,
-              options2,
-              manifest,
-              state,
-              resolve_opts,
-            );
+            response = await render_page(event2, route.page, options2, manifest, state, resolve_opts);
           } else {
             const allowed_methods2 = new Set(allowed_page_methods);
             const node = await manifest._.nodes[route.page.leaf]();
@@ -4719,8 +4324,8 @@ async function respond(request, options2, manifest, state) {
               response = new Response(null, {
                 status: 204,
                 headers: {
-                  allow: Array.from(allowed_methods2.values()).join(", "),
-                },
+                  allow: Array.from(allowed_methods2.values()).join(", ")
+                }
               });
             } else {
               const mod = [...allowed_methods2].reduce(
@@ -4729,7 +4334,7 @@ async function respond(request, options2, manifest, state) {
                   return acc;
                 },
                 /** @type {Record<string, any>} */
-                {},
+                {}
               );
               response = method_not_allowed(mod, method);
             }
@@ -4738,15 +4343,12 @@ async function respond(request, options2, manifest, state) {
           throw new Error("This should never happen");
         }
         if (request.method === "GET" && route.page && route.endpoint) {
-          const vary = response.headers
-            .get("vary")
-            ?.split(",")
-            ?.map((v) => v.trim().toLowerCase());
+          const vary = response.headers.get("vary")?.split(",")?.map((v) => v.trim().toLowerCase());
           if (!(vary?.includes("accept") || vary?.includes("*"))) {
             response = new Response(response.body, {
               status: response.status,
               statusText: response.statusText,
-              headers: new Headers(response.headers),
+              headers: new Headers(response.headers)
             });
             response.headers.append("Vary", "Accept");
           }
@@ -4756,13 +4358,13 @@ async function respond(request, options2, manifest, state) {
       if (state.error && event2.isSubRequest) {
         return await fetch(request, {
           headers: {
-            "x-sveltekit-error": "true",
-          },
+            "x-sveltekit-error": "true"
+          }
         });
       }
       if (state.error) {
         return text("Internal Server Error", {
-          status: 500,
+          status: 500
         });
       }
       if (state.depth === 0) {
@@ -4772,12 +4374,8 @@ async function respond(request, options2, manifest, state) {
           manifest,
           state,
           status: 404,
-          error: new SvelteKitError(
-            404,
-            "Not Found",
-            `Not found: ${event2.url.pathname}`,
-          ),
-          resolve_opts,
+          error: new SvelteKitError(404, "Not Found", `Not found: ${event2.url.pathname}`),
+          resolve_opts
         });
       }
       if (state.prerendering) {
@@ -4788,14 +4386,10 @@ async function respond(request, options2, manifest, state) {
       return await handle_fatal_error(event2, options2, e);
     } finally {
       event2.cookies.set = () => {
-        throw new Error(
-          "Cannot use `cookies.set(...)` after the response has been generated",
-        );
+        throw new Error("Cannot use `cookies.set(...)` after the response has been generated");
       };
       event2.setHeaders = () => {
-        throw new Error(
-          "Cannot use `setHeaders(...)` after the response has been generated",
-        );
+        throw new Error("Cannot use `setHeaders(...)` after the response has been generated");
       };
     }
   }
@@ -4811,9 +4405,7 @@ function escape_html(value, is_attr) {
   while (pattern2.test(str)) {
     const i = pattern2.lastIndex - 1;
     const ch = str[i];
-    escaped +=
-      str.substring(last, i) +
-      (ch === "&" ? "&amp;" : ch === '"' ? "&quot;" : "&lt;");
+    escaped += str.substring(last, i) + (ch === "&" ? "&amp;" : ch === '"' ? "&quot;" : "&lt;");
     last = i + 1;
   }
   return escaped + str.substring(last);
@@ -4821,9 +4413,10 @@ function escape_html(value, is_attr) {
 var current_component = null;
 function getContext(key2) {
   const context_map = get_or_init_context_map();
-  const result =
+  const result = (
     /** @type {T} */
-    context_map.get(key2);
+    context_map.get(key2)
+  );
   return result;
 }
 function setContext(key2, context) {
@@ -4834,17 +4427,16 @@ function get_or_init_context_map(name) {
   if (current_component === null) {
     lifecycle_outside_component();
   }
-  return (current_component.c ??= new Map(
-    get_parent_context(current_component) || void 0,
-  ));
+  return current_component.c ??= new Map(get_parent_context(current_component) || void 0);
 }
 function push(fn) {
   current_component = { p: current_component, c: null, d: null };
 }
 function pop() {
-  var component =
+  var component = (
     /** @type {Component} */
-    current_component;
+    current_component
+  );
   var ondestroy = component.d;
   if (ondestroy) {
     on_destroy.push(...ondestroy);
@@ -4866,11 +4458,7 @@ const BLOCK_OPEN = `<!--${HYDRATION_START}-->`;
 const BLOCK_CLOSE = `<!--${HYDRATION_END}-->`;
 let on_destroy = [];
 function render(component, options2 = {}) {
-  const payload = {
-    out: "",
-    css: /* @__PURE__ */ new Set(),
-    head: { title: "", out: "" },
-  };
+  const payload = { out: "", css: /* @__PURE__ */ new Set(), head: { title: "", out: "" } };
   const prev_on_destroy = on_destroy;
   on_destroy = [];
   payload.out += BLOCK_OPEN;
@@ -4892,24 +4480,18 @@ function render(component, options2 = {}) {
   return {
     head,
     html: payload.out,
-    body: payload.out,
+    body: payload.out
   };
 }
 const replacements = {
   translate: /* @__PURE__ */ new Map([
     [true, "yes"],
-    [false, "no"],
-  ]),
+    [false, "no"]
+  ])
 };
 function attr(name, value, is_boolean = false) {
-  if (
-    value == null ||
-    (!value && is_boolean) ||
-    (value === "" && name === "class")
-  )
-    return "";
-  const normalized =
-    (name in replacements && replacements[name].get(value)) || value;
+  if (value == null || !value && is_boolean || value === "" && name === "class") return "";
+  const normalized = name in replacements && replacements[name].get(value) || value;
   const assignment = is_boolean ? "" : `="${escape_html(normalized, true)}"`;
   return ` ${name}${assignment}`;
 }
@@ -4925,7 +4507,7 @@ function store_get(store_values, store_name, store) {
   const unsub = subscribe_to_store(
     store,
     /** @param {any} v */
-    (v) => (store_values[store_name][2] = v),
+    (v) => store_values[store_name][2] = v
   );
   store_values[store_name][1] = unsub;
   return store_values[store_name][2];
@@ -4948,11 +4530,7 @@ function bind_props(props_parent, props_now) {
   for (const key2 in props_now) {
     const initial_value = props_parent[key2];
     const value = props_now[key2];
-    if (
-      initial_value === void 0 &&
-      value !== void 0 &&
-      Object.getOwnPropertyDescriptor(props_parent, key2)?.set
-    ) {
+    if (initial_value === void 0 && value !== void 0 && Object.getOwnPropertyDescriptor(props_parent, key2)?.set) {
       props_parent[key2] = value;
     }
   }
@@ -4969,9 +4547,7 @@ function await_block(promise, pending_fn, then_fn) {
 }
 function ensure_array_like(array_like_or_iterator) {
   if (array_like_or_iterator) {
-    return array_like_or_iterator.length !== void 0
-      ? array_like_or_iterator
-      : Array.from(array_like_or_iterator);
+    return array_like_or_iterator.length !== void 0 ? array_like_or_iterator : Array.from(array_like_or_iterator);
   }
   return [];
 }
@@ -4982,20 +4558,22 @@ function asClassComponent(component) {
     return {
       css: { code: "", map: null },
       head: result.head,
-      html: result.body,
+      html: result.body
     };
   };
   component_constructor.render = _render;
   return component_constructor;
 }
 function onDestroy(fn) {
-  var context =
+  var context = (
     /** @type {Component} */
-    current_component;
+    current_component
+  );
   (context.d ??= []).push(fn);
 }
 let prerendering = false;
-function set_building() {}
+function set_building() {
+}
 function set_prerendering() {
   prerendering = true;
 }
@@ -5008,7 +4586,7 @@ function Root($$payload, $$props) {
     components = [],
     form,
     data_0 = null,
-    data_1 = null,
+    data_1 = null
   } = $$props;
   {
     setContext("__svelte__", stores);
@@ -5029,7 +4607,7 @@ function Root($$payload, $$props) {
         Pyramid_1($$payload2, { data: data_1, form });
         $$payload2.out += `<!---->`;
       },
-      $$slots: { default: true },
+      $$slots: { default: true }
     });
     $$payload.out += `<!---->`;
   } else {
@@ -5050,17 +4628,7 @@ const root = asClassComponent(Root);
 const options = {
   app_dir: "_app",
   app_template_contains_nonce: false,
-  csp: {
-    mode: "auto",
-    directives: {
-      "upgrade-insecure-requests": false,
-      "block-all-mixed-content": false,
-    },
-    reportOnly: {
-      "upgrade-insecure-requests": false,
-      "block-all-mixed-content": false,
-    },
-  },
+  csp: { "mode": "auto", "directives": { "upgrade-insecure-requests": false, "block-all-mixed-content": false }, "reportOnly": { "upgrade-insecure-requests": false, "block-all-mixed-content": false } },
   csrf_check_origin: true,
   embedded: false,
   env_public_prefix: "PUBLIC_",
@@ -5071,34 +4639,8 @@ const options = {
   root,
   service_worker: false,
   templates: {
-    app: ({ head, body: body2, assets: assets2, nonce, env }) =>
-      '<!doctype html>\n<html lang="en">\n  <head>\n    <meta charset="utf-8" />\n    <meta content="width=device-width, initial-scale=1" name="viewport" />\n\n    <title>OpenWSL</title>\n    <link href="https://openwsl.xyz" rel="canonical" />\n    <meta\n      content="OpenWSL is a decentralised fantasy football game on the Internet Computer blockchain."\n      name="description"\n    />\n    <meta content="OpenWSL" property="og:title" />\n    <meta\n      content="OpenWSL is a decentralised fantasy football game on the Internet Computer blockchain."\n      property="og:description"\n    />\n    <meta content="website" property="og:type" />\n    <meta content="https://openwsl.xyz" property="og:url" />\n    <meta content="https://openwsl.xyz/meta-share.jpg" property="og:image" />\n    <meta content="summary_large_image" name="twitter:card" />\n    <meta content="OpenWSL" name="twitter:title" />\n    <meta\n      content="OpenWSL is a decentralised fantasy football platform on the Internet Computer blockchain."\n      name="twitter:description"\n    />\n    <meta content="https://openwsl.xyz/meta-share.jpg" name="twitter:image" />\n    <meta content="@beadle1989" name="twitter:creator" />\n\n    <link crossorigin="anonymous" href="/manifest.webmanifest" rel="manifest" />\n\n    <link rel="preload" href="/adopt_filled.png" as="image" />\n    <link rel="preload" href="/adopt.png" as="image" />\n    <link rel="preload" href="/background.jpg" as="image" />\n    <link rel="preload" href="/board.png" as="image" />\n    <link rel="preload" href="/brace-bonus.png" as="image" />\n    <link rel="preload" href="/ckBTCCoin.png" as="image" />\n    <link rel="preload" href="/ckETHCoin.png" as="image" />\n    <link rel="preload" href="/one-nation.png" as="image" />\n    <link rel="preload" href="/discord.png" as="image" />\n    <link rel="preload" href="/FPLCoin.png" as="image" />\n    <link rel="preload" href="/github.png" as="image" />\n    <link rel="preload" href="/hat-trick-hero.png" as="image" />\n    <link rel="preload" href="/ICPCoin.png" as="image" />\n    <link rel="preload" href="/no-entry.png" as="image" />\n    <link rel="preload" href="/openchat.png" as="image" />\n    <link rel="preload" href="/pass-master.png" as="image" />\n    <link rel="preload" href="/pitch.png" as="image" />\n    <link rel="preload" href="/profile_placeholder.png" as="image" />\n    <link rel="preload" href="/prospects.png" as="image" />\n    <link rel="preload" href="/reject.png" as="image" />\n    <link rel="preload" href="/reject_filled.png" as="image" />\n    <link rel="preload" href="/safe-hands.png" as="image" />\n    <link rel="preload" href="/team-boost.png" as="image" />\n    <link rel="preload" href="/twitter.png" as="image" />\n\n    <!-- Favicon -->\n    <link\n      rel="icon"\n      type="image/png"\n      sizes="32x32"\n      href="' +
-      assets2 +
-      '/favicons/favicon-32x32.png"\n    />\n    <link\n      rel="icon"\n      type="image/png"\n      sizes="16x16"\n      href="' +
-      assets2 +
-      '/favicons/favicon-16x16.png"\n    />\n    <link rel="shortcut icon" href="' +
-      assets2 +
-      '/favicons/favicon.ico" />\n\n    <!-- iOS meta tags & icons -->\n    <meta name="apple-mobile-web-app-capable" content="yes" />\n    <meta name="apple-mobile-web-app-status-bar-style" content="#2CE3A6" />\n    <meta name="apple-mobile-web-app-title" content="OpenWSL" />\n    <link\n      rel="apple-touch-icon"\n      href="' +
-      assets2 +
-      '/favicons/apple-touch-icon.png"\n    />\n    <link\n      rel="mask-icon"\n      href="' +
-      assets2 +
-      '/favicons/safari-pinned-tab.svg"\n      color="#2CE3A6"\n    />\n\n    <!-- MS -->\n    <meta name="msapplication-TileColor" content="#2CE3A6" />\n    <meta\n      name="msapplication-config"\n      content="' +
-      assets2 +
-      '/favicons/browserconfig.xml"\n    />\n\n    <meta content="#2CE3A6" name="theme-color" />\n    ' +
-      head +
-      '\n\n    <style>\n      html,\n      body {\n        height: 100%;\n        margin: 0;\n      }\n\n      @font-face {\n        font-display: swap;\n        font-family: "Poppins";\n        font-style: normal;\n        font-weight: 400;\n        src: url("' +
-      assets2 +
-      '/poppins-regular-webfont.woff2")\n          format("woff2");\n      }\n\n      @font-face {\n        font-display: swap;\n        font-family: "Manrope";\n        font-style: normal;\n        font-weight: 400;\n        src: url("' +
-      assets2 +
-      '/Manrope-Regular.woff2") format("woff2");\n      }\n      body {\n        font-family: "Poppins", sans-serif !important;\n        color: white !important;\n        background-color: #1a1a1d;\n        height: 100vh;\n        margin: 0;\n        background-image: url("' +
-      assets2 +
-      '/background.jpg");\n        background-size: cover;\n        background-position: center;\n        background-repeat: no-repeat;\n        background-attachment: fixed;\n      }\n\n      #app-spinner {\n        --spinner-size: 30px;\n\n        width: var(--spinner-size);\n        height: var(--spinner-size);\n\n        animation: app-spinner-linear-rotate 2000ms linear infinite;\n\n        position: absolute;\n        top: calc(50% - (var(--spinner-size) / 2));\n        left: calc(50% - (var(--spinner-size) / 2));\n\n        --radius: 45px;\n        --circumference: calc(3.14159265359 * var(--radius) * 2);\n\n        --start: calc((1 - 0.05) * var(--circumference));\n        --end: calc((1 - 0.8) * var(--circumference));\n      }\n\n      #app-spinner circle {\n        stroke-dasharray: var(--circumference);\n        stroke-width: 10%;\n        transform-origin: 50% 50% 0;\n\n        transition-property: stroke;\n\n        animation-name: app-spinner-stroke-rotate-100;\n        animation-duration: 4000ms;\n        animation-timing-function: cubic-bezier(0.35, 0, 0.25, 1);\n        animation-iteration-count: infinite;\n\n        fill: transparent;\n        stroke: currentColor;\n\n        transition: stroke-dashoffset 225ms linear;\n      }\n\n      @keyframes app-spinner-linear-rotate {\n        0% {\n          transform: rotate(0deg);\n        }\n        100% {\n          transform: rotate(360deg);\n        }\n      }\n\n      @keyframes app-spinner-stroke-rotate-100 {\n        0% {\n          stroke-dashoffset: var(--start);\n          transform: rotate(0);\n        }\n        12.5% {\n          stroke-dashoffset: var(--end);\n          transform: rotate(0);\n        }\n        12.5001% {\n          stroke-dashoffset: var(--end);\n          transform: rotateX(180deg) rotate(72.5deg);\n        }\n        25% {\n          stroke-dashoffset: var(--start);\n          transform: rotateX(180deg) rotate(72.5deg);\n        }\n\n        25.0001% {\n          stroke-dashoffset: var(--start);\n          transform: rotate(270deg);\n        }\n        37.5% {\n          stroke-dashoffset: var(--end);\n          transform: rotate(270deg);\n        }\n        37.5001% {\n          stroke-dashoffset: var(--end);\n          transform: rotateX(180deg) rotate(161.5deg);\n        }\n        50% {\n          stroke-dashoffset: var(--start);\n          transform: rotateX(180deg) rotate(161.5deg);\n        }\n\n        50.0001% {\n          stroke-dashoffset: var(--start);\n          transform: rotate(180deg);\n        }\n        62.5% {\n          stroke-dashoffset: var(--end);\n          transform: rotate(180deg);\n        }\n        62.5001% {\n          stroke-dashoffset: var(--end);\n          transform: rotateX(180deg) rotate(251.5deg);\n        }\n        75% {\n          stroke-dashoffset: var(--start);\n          transform: rotateX(180deg) rotate(251.5deg);\n        }\n\n        75.0001% {\n          stroke-dashoffset: var(--start);\n          transform: rotate(90deg);\n        }\n        87.5% {\n          stroke-dashoffset: var(--end);\n          transform: rotate(90deg);\n        }\n        87.5001% {\n          stroke-dashoffset: var(--end);\n          transform: rotateX(180deg) rotate(341.5deg);\n        }\n        100% {\n          stroke-dashoffset: var(--start);\n          transform: rotateX(180deg) rotate(341.5deg);\n        }\n      }\n    </style>\n  </head>\n  <body data-sveltekit-preload-data="hover">\n    <div style="display: contents">' +
-      body2 +
-      '</div>\n\n    <svg\n      id="app-spinner"\n      preserveAspectRatio="xMidYMid meet"\n      focusable="false"\n      aria-hidden="true"\n      data-tid="spinner"\n      viewBox="0 0 100 100"\n    >\n      <circle cx="50%" cy="50%" r="45" />\n    </svg>\n  </body>\n</html>\n',
-    error: ({ status, message }) =>
-      '<!doctype html>\n<html lang="en">\n	<head>\n		<meta charset="utf-8" />\n		<title>' +
-      message +
-      `</title>
+    app: ({ head, body: body2, assets: assets2, nonce, env }) => '<!doctype html>\n<html lang="en">\n  <head>\n    <meta charset="utf-8" />\n    <meta content="width=device-width, initial-scale=1" name="viewport" />\n\n    <title>OpenWSL</title>\n    <link href="https://openwsl.xyz" rel="canonical" />\n    <meta\n      content="OpenWSL is a decentralised fantasy football game on the Internet Computer blockchain."\n      name="description"\n    />\n    <meta content="OpenWSL" property="og:title" />\n    <meta\n      content="OpenWSL is a decentralised fantasy football game on the Internet Computer blockchain."\n      property="og:description"\n    />\n    <meta content="website" property="og:type" />\n    <meta content="https://openwsl.xyz" property="og:url" />\n    <meta content="https://openwsl.xyz/meta-share.jpg" property="og:image" />\n    <meta content="summary_large_image" name="twitter:card" />\n    <meta content="OpenWSL" name="twitter:title" />\n    <meta\n      content="OpenWSL is a decentralised fantasy football platform on the Internet Computer blockchain."\n      name="twitter:description"\n    />\n    <meta content="https://openwsl.xyz/meta-share.jpg" name="twitter:image" />\n    <meta content="@beadle1989" name="twitter:creator" />\n\n    <link crossorigin="anonymous" href="/manifest.webmanifest" rel="manifest" />\n\n    <link rel="preload" href="/adopt_filled.png" as="image" />\n    <link rel="preload" href="/adopt.png" as="image" />\n    <link rel="preload" href="/background.jpg" as="image" />\n    <link rel="preload" href="/board.png" as="image" />\n    <link rel="preload" href="/brace-bonus.png" as="image" />\n    <link rel="preload" href="/ckBTCCoin.png" as="image" />\n    <link rel="preload" href="/ckETHCoin.png" as="image" />\n    <link rel="preload" href="/one-nation.png" as="image" />\n    <link rel="preload" href="/discord.png" as="image" />\n    <link rel="preload" href="/FPLCoin.png" as="image" />\n    <link rel="preload" href="/github.png" as="image" />\n    <link rel="preload" href="/hat-trick-hero.png" as="image" />\n    <link rel="preload" href="/ICPCoin.png" as="image" />\n    <link rel="preload" href="/no-entry.png" as="image" />\n    <link rel="preload" href="/openchat.png" as="image" />\n    <link rel="preload" href="/pass-master.png" as="image" />\n    <link rel="preload" href="/pitch.png" as="image" />\n    <link rel="preload" href="/profile_placeholder.png" as="image" />\n    <link rel="preload" href="/prospects.png" as="image" />\n    <link rel="preload" href="/reject.png" as="image" />\n    <link rel="preload" href="/reject_filled.png" as="image" />\n    <link rel="preload" href="/safe-hands.png" as="image" />\n    <link rel="preload" href="/team-boost.png" as="image" />\n    <link rel="preload" href="/twitter.png" as="image" />\n\n    <!-- Favicon -->\n    <link\n      rel="icon"\n      type="image/png"\n      sizes="32x32"\n      href="' + assets2 + '/favicons/favicon-32x32.png"\n    />\n    <link\n      rel="icon"\n      type="image/png"\n      sizes="16x16"\n      href="' + assets2 + '/favicons/favicon-16x16.png"\n    />\n    <link rel="shortcut icon" href="' + assets2 + '/favicons/favicon.ico" />\n\n    <!-- iOS meta tags & icons -->\n    <meta name="apple-mobile-web-app-capable" content="yes" />\n    <meta name="apple-mobile-web-app-status-bar-style" content="#2CE3A6" />\n    <meta name="apple-mobile-web-app-title" content="OpenWSL" />\n    <link\n      rel="apple-touch-icon"\n      href="' + assets2 + '/favicons/apple-touch-icon.png"\n    />\n    <link\n      rel="mask-icon"\n      href="' + assets2 + '/favicons/safari-pinned-tab.svg"\n      color="#2CE3A6"\n    />\n\n    <!-- MS -->\n    <meta name="msapplication-TileColor" content="#2CE3A6" />\n    <meta\n      name="msapplication-config"\n      content="' + assets2 + '/favicons/browserconfig.xml"\n    />\n\n    <meta content="#2CE3A6" name="theme-color" />\n    ' + head + '\n\n    <style>\n      html,\n      body {\n        height: 100%;\n        margin: 0;\n      }\n\n      @font-face {\n        font-display: swap;\n        font-family: "Poppins";\n        font-style: normal;\n        font-weight: 400;\n        src: url("' + assets2 + '/poppins-regular-webfont.woff2")\n          format("woff2");\n      }\n\n      @font-face {\n        font-display: swap;\n        font-family: "Manrope";\n        font-style: normal;\n        font-weight: 400;\n        src: url("' + assets2 + '/Manrope-Regular.woff2") format("woff2");\n      }\n      body {\n        font-family: "Poppins", sans-serif !important;\n        color: white !important;\n        background-color: #1a1a1d;\n        height: 100vh;\n        margin: 0;\n        background-image: url("' + assets2 + '/background.jpg");\n        background-size: cover;\n        background-position: center;\n        background-repeat: no-repeat;\n        background-attachment: fixed;\n      }\n\n      #app-spinner {\n        --spinner-size: 30px;\n\n        width: var(--spinner-size);\n        height: var(--spinner-size);\n\n        animation: app-spinner-linear-rotate 2000ms linear infinite;\n\n        position: absolute;\n        top: calc(50% - (var(--spinner-size) / 2));\n        left: calc(50% - (var(--spinner-size) / 2));\n\n        --radius: 45px;\n        --circumference: calc(3.14159265359 * var(--radius) * 2);\n\n        --start: calc((1 - 0.05) * var(--circumference));\n        --end: calc((1 - 0.8) * var(--circumference));\n      }\n\n      #app-spinner circle {\n        stroke-dasharray: var(--circumference);\n        stroke-width: 10%;\n        transform-origin: 50% 50% 0;\n\n        transition-property: stroke;\n\n        animation-name: app-spinner-stroke-rotate-100;\n        animation-duration: 4000ms;\n        animation-timing-function: cubic-bezier(0.35, 0, 0.25, 1);\n        animation-iteration-count: infinite;\n\n        fill: transparent;\n        stroke: currentColor;\n\n        transition: stroke-dashoffset 225ms linear;\n      }\n\n      @keyframes app-spinner-linear-rotate {\n        0% {\n          transform: rotate(0deg);\n        }\n        100% {\n          transform: rotate(360deg);\n        }\n      }\n\n      @keyframes app-spinner-stroke-rotate-100 {\n        0% {\n          stroke-dashoffset: var(--start);\n          transform: rotate(0);\n        }\n        12.5% {\n          stroke-dashoffset: var(--end);\n          transform: rotate(0);\n        }\n        12.5001% {\n          stroke-dashoffset: var(--end);\n          transform: rotateX(180deg) rotate(72.5deg);\n        }\n        25% {\n          stroke-dashoffset: var(--start);\n          transform: rotateX(180deg) rotate(72.5deg);\n        }\n\n        25.0001% {\n          stroke-dashoffset: var(--start);\n          transform: rotate(270deg);\n        }\n        37.5% {\n          stroke-dashoffset: var(--end);\n          transform: rotate(270deg);\n        }\n        37.5001% {\n          stroke-dashoffset: var(--end);\n          transform: rotateX(180deg) rotate(161.5deg);\n        }\n        50% {\n          stroke-dashoffset: var(--start);\n          transform: rotateX(180deg) rotate(161.5deg);\n        }\n\n        50.0001% {\n          stroke-dashoffset: var(--start);\n          transform: rotate(180deg);\n        }\n        62.5% {\n          stroke-dashoffset: var(--end);\n          transform: rotate(180deg);\n        }\n        62.5001% {\n          stroke-dashoffset: var(--end);\n          transform: rotateX(180deg) rotate(251.5deg);\n        }\n        75% {\n          stroke-dashoffset: var(--start);\n          transform: rotateX(180deg) rotate(251.5deg);\n        }\n\n        75.0001% {\n          stroke-dashoffset: var(--start);\n          transform: rotate(90deg);\n        }\n        87.5% {\n          stroke-dashoffset: var(--end);\n          transform: rotate(90deg);\n        }\n        87.5001% {\n          stroke-dashoffset: var(--end);\n          transform: rotateX(180deg) rotate(341.5deg);\n        }\n        100% {\n          stroke-dashoffset: var(--start);\n          transform: rotateX(180deg) rotate(341.5deg);\n        }\n      }\n    </style>\n  </head>\n  <body data-sveltekit-preload-data="hover">\n    <div style="display: contents">' + body2 + '</div>\n\n    <svg\n      id="app-spinner"\n      preserveAspectRatio="xMidYMid meet"\n      focusable="false"\n      aria-hidden="true"\n      data-tid="spinner"\n      viewBox="0 0 100 100"\n    >\n      <circle cx="50%" cy="50%" r="45" />\n    </svg>\n  </body>\n</html>\n',
+    error: ({ status, message }) => '<!doctype html>\n<html lang="en">\n	<head>\n		<meta charset="utf-8" />\n		<title>' + message + `</title>
 
 		<style>
 			body {
@@ -5167,13 +4709,9 @@ const options = {
 	</head>
 	<body>
 		<div class="error">
-			<span class="status">` +
-      status +
-      '</span>\n			<div class="message">\n				<h1>' +
-      message +
-      "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n",
+			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "178o3q7",
+  version_hash: "q3c7ng"
 };
 async function get_hooks() {
   return {};
@@ -5181,27 +4719,23 @@ async function get_hooks() {
 function filter_private_env(env, { public_prefix, private_prefix }) {
   return Object.fromEntries(
     Object.entries(env).filter(
-      ([k]) =>
-        k.startsWith(private_prefix) &&
-        (public_prefix === "" || !k.startsWith(public_prefix)),
-    ),
+      ([k]) => k.startsWith(private_prefix) && (public_prefix === "" || !k.startsWith(public_prefix))
+    )
   );
 }
 function filter_public_env(env, { public_prefix, private_prefix }) {
   return Object.fromEntries(
     Object.entries(env).filter(
-      ([k]) =>
-        k.startsWith(public_prefix) &&
-        (private_prefix === "" || !k.startsWith(private_prefix)),
-    ),
+      ([k]) => k.startsWith(public_prefix) && (private_prefix === "" || !k.startsWith(private_prefix))
+    )
   );
 }
 const prerender_env_handler = {
   get({ type }, prop) {
     throw new Error(
-      `Cannot read values from $env/dynamic/${type} while prerendering (attempted to read env.${prop.toString()}). Use $env/static/${type} instead`,
+      `Cannot read values from $env/dynamic/${type} while prerendering (attempted to read env.${prop.toString()}). Use $env/static/${type} instead`
     );
-  },
+  }
 };
 class Server {
   /** @type {import('types').SSROptions} */
@@ -5222,19 +4756,15 @@ class Server {
   async init({ env, read }) {
     const prefixes = {
       public_prefix: this.#options.env_public_prefix,
-      private_prefix: this.#options.env_private_prefix,
+      private_prefix: this.#options.env_private_prefix
     };
     const private_env = filter_private_env(env, prefixes);
     const public_env2 = filter_public_env(env, prefixes);
     set_private_env(
-      prerendering
-        ? new Proxy({ type: "private" }, prerender_env_handler)
-        : private_env,
+      prerendering ? new Proxy({ type: "private" }, prerender_env_handler) : private_env
     );
     set_public_env(
-      prerendering
-        ? new Proxy({ type: "public" }, prerender_env_handler)
-        : public_env2,
+      prerendering ? new Proxy({ type: "public" }, prerender_env_handler) : public_env2
     );
     set_safe_public_env(public_env2);
     if (read) {
@@ -5244,15 +4774,11 @@ class Server {
       try {
         const module = await get_hooks();
         this.#options.hooks = {
-          handle:
-            module.handle ||
-            (({ event, resolve: resolve2 }) => resolve2(event)),
-          handleError:
-            module.handleError || (({ error }) => console.error(error)),
-          handleFetch:
-            module.handleFetch ||
-            (({ request, fetch: fetch2 }) => fetch2(request)),
-          reroute: module.reroute || (() => {}),
+          handle: module.handle || (({ event, resolve: resolve2 }) => resolve2(event)),
+          handleError: module.handleError || (({ error }) => console.error(error)),
+          handleFetch: module.handleFetch || (({ request, fetch: fetch2 }) => fetch2(request)),
+          reroute: module.reroute || (() => {
+          })
         };
       } catch (error) {
         {
@@ -5269,7 +4795,7 @@ class Server {
     return respond(request, this.#options, this.#manifest, {
       ...options2,
       error: false,
-      depth: 0,
+      depth: 0
     });
   }
 }
@@ -5283,7 +4809,8 @@ function Layout$1($$payload, $$props) {
 function get(key2, parse2 = JSON.parse) {
   try {
     return parse2(sessionStorage[key2]);
-  } catch {}
+  } catch {
+  }
 }
 const SNAPSHOT_KEY = "sveltekit:snapshot";
 const SCROLL_KEY = "sveltekit:scroll";
@@ -5294,103 +4821,103 @@ const getStores = () => {
   return {
     /** @type {typeof page} */
     page: {
-      subscribe: stores.page.subscribe,
+      subscribe: stores.page.subscribe
     },
     /** @type {typeof navigating} */
     navigating: {
-      subscribe: stores.navigating.subscribe,
+      subscribe: stores.navigating.subscribe
     },
     /** @type {typeof updated} */
-    updated: stores.updated,
+    updated: stores.updated
   };
 };
 const page = {
   subscribe(fn) {
     const store = getStores().page;
     return store.subscribe(fn);
-  },
+  }
 };
 function Error$1($$payload, $$props) {
   push();
   var $$store_subs;
-  $$payload.out += `<h1>${escape_html(store_get(($$store_subs ??= {}), "$page", page).status)}</h1> <p>${escape_html(store_get(($$store_subs ??= {}), "$page", page).error?.message)}</p>`;
+  $$payload.out += `<h1>${escape_html(store_get($$store_subs ??= {}, "$page", page).status)}</h1> <p>${escape_html(store_get($$store_subs ??= {}, "$page", page).error?.message)}</p>`;
   if ($$store_subs) unsubscribe_stores($$store_subs);
   pop();
 }
-const AUTH_MAX_TIME_TO_LIVE = BigInt(60 * 60 * 1e3 * 1e3 * 1e3 * 24 * 14);
+const AUTH_MAX_TIME_TO_LIVE = BigInt(
+  60 * 60 * 1e3 * 1e3 * 1e3 * 24 * 14
+);
 const AUTH_POPUP_WIDTH = 576;
 const AUTH_POPUP_HEIGHT = 625;
-const createAuthClient = () =>
-  AuthClient.create({
-    idleOptions: {
-      disableIdle: true,
-      disableDefaultIdleCallback: true,
-    },
-  });
-const popupCenter = ({ width, height }) => {
+const createAuthClient = () => AuthClient.create({
+  idleOptions: {
+    disableIdle: true,
+    disableDefaultIdleCallback: true
+  }
+});
+const popupCenter = ({
+  width,
+  height
+}) => {
   {
     return void 0;
   }
 };
 let authClient;
 const NNS_IC_ORG_ALTERNATIVE_ORIGIN = "https://openwsl.xyz";
-const NNS_IC_APP_DERIVATION_ORIGIN =
-  "https://5ido2-wqaaa-aaaal-qmzra-cai.icp0.io";
+const NNS_IC_APP_DERIVATION_ORIGIN = "https://5ido2-wqaaa-aaaal-qmzra-cai.icp0.io";
 const isNnsAlternativeOrigin = () => {
   return window.location.origin === NNS_IC_ORG_ALTERNATIVE_ORIGIN;
 };
 const initAuthStore = () => {
-  const {
-    subscribe,
-    set: set2,
-    update,
-  } = writable({
-    identity: void 0,
+  const { subscribe, set: set2, update } = writable({
+    identity: void 0
   });
   return {
     subscribe,
     sync: async () => {
-      authClient = authClient ?? (await createAuthClient());
+      authClient = authClient ?? await createAuthClient();
       const isAuthenticated = await authClient.isAuthenticated();
       set2({
-        identity: isAuthenticated ? authClient.getIdentity() : null,
+        identity: isAuthenticated ? authClient.getIdentity() : null
       });
     },
-    signIn: ({ domain }) =>
+    signIn: ({ domain }) => (
       // eslint-disable-next-line no-async-promise-executor
       new Promise(async (resolve2, reject) => {
-        authClient = authClient ?? (await createAuthClient());
+        authClient = authClient ?? await createAuthClient();
         const identityProvider = domain;
         await authClient?.login({
           maxTimeToLive: AUTH_MAX_TIME_TO_LIVE,
           onSuccess: () => {
             update((state) => ({
               ...state,
-              identity: authClient?.getIdentity(),
+              identity: authClient?.getIdentity()
             }));
             resolve2();
           },
           onError: reject,
           identityProvider,
-          ...(isNnsAlternativeOrigin() && {
-            derivationOrigin: NNS_IC_APP_DERIVATION_ORIGIN,
-          }),
+          ...isNnsAlternativeOrigin() && {
+            derivationOrigin: NNS_IC_APP_DERIVATION_ORIGIN
+          },
           windowOpenerFeatures: popupCenter({
             width: AUTH_POPUP_WIDTH,
-            height: AUTH_POPUP_HEIGHT,
-          }),
+            height: AUTH_POPUP_HEIGHT
+          })
         });
-      }),
+      })
+    ),
     signOut: async () => {
-      const client = authClient ?? (await createAuthClient());
+      const client = authClient ?? await createAuthClient();
       await client.logout();
       authClient = null;
       update((state) => ({
         ...state,
-        identity: null,
+        identity: null
       }));
       localStorage.removeItem("user_profile_data");
-    },
+    }
   };
 };
 const authStore = initAuthStore();
@@ -5398,11 +4925,13 @@ function createSystemStore() {
   const { subscribe, set: set2 } = writable(null);
   return {
     subscribe,
-    setSystemState: (systemState) => set2(systemState),
+    setSystemState: (systemState) => set2(systemState)
   };
 }
 const systemStore = createSystemStore();
 const idlFactory = ({ IDL }) => {
+  const List = IDL.Rec();
+  const List_1 = IDL.Rec();
   const Error2 = IDL.Variant({
     MoreThan2PlayersFromClub: IDL.Null,
     DecodeError: IDL.Null,
@@ -5419,10 +4948,32 @@ const idlFactory = ({ IDL }) => {
     SystemOnHold: IDL.Null,
     AlreadyExists: IDL.Null,
     CanisterCreateError: IDL.Null,
-    Not11Players: IDL.Null,
+    Not11Players: IDL.Null
   });
   const Result = IDL.Variant({ ok: IDL.Null, err: Error2 });
-  const Result_21 = IDL.Variant({ ok: IDL.Text, err: Error2 });
+  const GameweekNumber = IDL.Nat8;
+  const Result_24 = IDL.Variant({ ok: IDL.Text, err: Error2 });
+  const CanisterType = IDL.Variant({
+    SNS: IDL.Null,
+    Leaderboard: IDL.Null,
+    Dapp: IDL.Null,
+    Archive: IDL.Null,
+    Manager: IDL.Null
+  });
+  const GetCanistersDTO = IDL.Record({ canisterType: CanisterType });
+  const CanisterId = IDL.Text;
+  const CanisterTopup = IDL.Record({
+    topupTime: IDL.Int,
+    canisterId: CanisterId,
+    cyclesAmount: IDL.Nat
+  });
+  const CanisterDTO = IDL.Record({
+    cycles: IDL.Nat,
+    topups: IDL.Vec(CanisterTopup),
+    computeAllocation: IDL.Nat,
+    canisterId: CanisterId
+  });
+  const Result_23 = IDL.Variant({ ok: IDL.Vec(CanisterDTO), err: Error2 });
   const ClubId = IDL.Nat16;
   const ShirtType = IDL.Variant({ Filled: IDL.Null, Striped: IDL.Null });
   const ClubDTO = IDL.Record({
@@ -5433,18 +4984,16 @@ const idlFactory = ({ IDL }) => {
     thirdColourHex: IDL.Text,
     abbreviatedName: IDL.Text,
     shirtType: ShirtType,
-    primaryColourHex: IDL.Text,
+    primaryColourHex: IDL.Text
   });
-  const Result_20 = IDL.Variant({ ok: IDL.Vec(ClubDTO), err: Error2 });
+  const Result_22 = IDL.Variant({ ok: IDL.Vec(ClubDTO), err: Error2 });
   const CountryId = IDL.Nat16;
   const CountryDTO = IDL.Record({
     id: CountryId,
     code: IDL.Text,
-    name: IDL.Text,
+    name: IDL.Text
   });
-  const Result_19 = IDL.Variant({ ok: IDL.Vec(CountryDTO), err: Error2 });
-  const GameweekNumber = IDL.Nat8;
-  const CanisterId = IDL.Text;
+  const Result_21 = IDL.Variant({ ok: IDL.Vec(CountryDTO), err: Error2 });
   const PickTeamDTO = IDL.Record({
     playerIds: IDL.Vec(ClubId),
     username: IDL.Text,
@@ -5472,17 +5021,17 @@ const idlFactory = ({ IDL }) => {
     passMasterPlayerId: ClubId,
     captainId: ClubId,
     canisterId: CanisterId,
-    monthlyBonusesAvailable: IDL.Nat8,
+    monthlyBonusesAvailable: IDL.Nat8
   });
-  const Result_18 = IDL.Variant({ ok: PickTeamDTO, err: Error2 });
+  const Result_20 = IDL.Variant({ ok: PickTeamDTO, err: Error2 });
   const DataHashDTO = IDL.Record({ hash: IDL.Text, category: IDL.Text });
-  const Result_17 = IDL.Variant({ ok: IDL.Vec(DataHashDTO), err: Error2 });
+  const Result_19 = IDL.Variant({ ok: IDL.Vec(DataHashDTO), err: Error2 });
   const SeasonId = IDL.Nat16;
   const PrincipalId = IDL.Text;
   const GetFantasyTeamSnapshotDTO = IDL.Record({
     seasonId: SeasonId,
     managerPrincipalId: PrincipalId,
-    gameweek: GameweekNumber,
+    gameweek: GameweekNumber
   });
   const CalendarMonth = IDL.Nat8;
   const FantasyTeamSnapshotDTO = IDL.Record({
@@ -5518,22 +5067,18 @@ const idlFactory = ({ IDL }) => {
     passMasterPlayerId: ClubId,
     captainId: ClubId,
     points: IDL.Int16,
-    monthlyBonusesAvailable: IDL.Nat8,
+    monthlyBonusesAvailable: IDL.Nat8
   });
-  const Result_16 = IDL.Variant({
+  const Result_18 = IDL.Variant({
     ok: FantasyTeamSnapshotDTO,
-    err: Error2,
+    err: Error2
   });
   const LeagueId = IDL.Nat16;
-  const RequestFixturesDTO = IDL.Record({
-    seasonId: SeasonId,
-    leagueId: LeagueId,
-  });
   const FixtureStatusType = IDL.Variant({
     Unplayed: IDL.Null,
     Finalised: IDL.Null,
     Active: IDL.Null,
-    Complete: IDL.Null,
+    Complete: IDL.Null
   });
   const FixtureId = IDL.Nat32;
   const PlayerEventType = IDL.Variant({
@@ -5548,7 +5093,7 @@ const idlFactory = ({ IDL }) => {
     YellowCard: IDL.Null,
     GoalAssisted: IDL.Null,
     OwnGoal: IDL.Null,
-    HighestScoringPlayer: IDL.Null,
+    HighestScoringPlayer: IDL.Null
   });
   const PlayerEventData = IDL.Record({
     fixtureId: FixtureId,
@@ -5556,7 +5101,7 @@ const idlFactory = ({ IDL }) => {
     playerId: IDL.Nat16,
     eventStartMinute: IDL.Nat8,
     eventEndMinute: IDL.Nat8,
-    eventType: PlayerEventType,
+    eventType: PlayerEventType
   });
   const FixtureDTO = IDL.Record({
     id: IDL.Nat32,
@@ -5569,25 +5114,25 @@ const idlFactory = ({ IDL }) => {
     kickOff: IDL.Int,
     homeGoals: IDL.Nat8,
     gameweek: GameweekNumber,
-    awayGoals: IDL.Nat8,
+    awayGoals: IDL.Nat8
   });
-  const Result_10 = IDL.Variant({ ok: IDL.Vec(FixtureDTO), err: Error2 });
-  const Result_15 = IDL.Variant({ ok: IDL.Vec(CanisterId), err: Error2 });
+  const Result_12 = IDL.Variant({ ok: IDL.Vec(FixtureDTO), err: Error2 });
+  const Result_17 = IDL.Variant({ ok: IDL.Vec(CanisterId), err: Error2 });
   const ClubFilterDTO = IDL.Record({
     clubId: ClubId,
-    leagueId: LeagueId,
+    leagueId: LeagueId
   });
   const PlayerStatus = IDL.Variant({
     OnLoan: IDL.Null,
     Active: IDL.Null,
     FreeAgent: IDL.Null,
-    Retired: IDL.Null,
+    Retired: IDL.Null
   });
   const PlayerPosition = IDL.Variant({
     Goalkeeper: IDL.Null,
     Midfielder: IDL.Null,
     Forward: IDL.Null,
-    Defender: IDL.Null,
+    Defender: IDL.Null
   });
   const PlayerDTO = IDL.Record({
     id: IDL.Nat16,
@@ -5599,15 +5144,15 @@ const idlFactory = ({ IDL }) => {
     shirtNumber: IDL.Nat8,
     position: PlayerPosition,
     lastName: IDL.Text,
-    firstName: IDL.Text,
+    firstName: IDL.Text
   });
-  const Result_3 = IDL.Variant({ ok: IDL.Vec(PlayerDTO), err: Error2 });
+  const Result_5 = IDL.Variant({ ok: IDL.Vec(PlayerDTO), err: Error2 });
   const RequestManagerDTO = IDL.Record({
     month: CalendarMonth,
     clubId: ClubId,
     seasonId: SeasonId,
     managerId: IDL.Text,
-    gameweek: GameweekNumber,
+    gameweek: GameweekNumber
   });
   const PlayerId = IDL.Nat16;
   const FantasyTeamSnapshot = IDL.Record({
@@ -5643,7 +5188,7 @@ const idlFactory = ({ IDL }) => {
     passMasterPlayerId: PlayerId,
     captainId: PlayerId,
     points: IDL.Int16,
-    monthlyBonusesAvailable: IDL.Nat8,
+    monthlyBonusesAvailable: IDL.Nat8
   });
   const ManagerDTO = IDL.Record({
     username: IDL.Text,
@@ -5659,8 +5204,9 @@ const idlFactory = ({ IDL }) => {
     monthlyPositionText: IDL.Text,
     profilePicture: IDL.Opt(IDL.Vec(IDL.Nat8)),
     seasonPoints: IDL.Int16,
+    profilePictureType: IDL.Text,
     principalId: IDL.Text,
-    seasonPositionText: IDL.Text,
+    seasonPositionText: IDL.Text
   });
   const Result_1 = IDL.Variant({ ok: ManagerDTO, err: Error2 });
   const GetMonthlyLeaderboardDTO = IDL.Record({
@@ -5669,45 +5215,45 @@ const idlFactory = ({ IDL }) => {
     offset: IDL.Nat,
     seasonId: SeasonId,
     limit: IDL.Nat,
-    searchTerm: IDL.Text,
+    searchTerm: IDL.Text
   });
   const LeaderboardEntry = IDL.Record({
     username: IDL.Text,
     positionText: IDL.Text,
     position: IDL.Nat,
     principalId: IDL.Text,
-    points: IDL.Int16,
+    points: IDL.Int16
   });
   const MonthlyLeaderboardDTO = IDL.Record({
     month: IDL.Nat8,
     clubId: ClubId,
     totalEntries: IDL.Nat,
     seasonId: SeasonId,
-    entries: IDL.Vec(LeaderboardEntry),
+    entries: IDL.Vec(LeaderboardEntry)
   });
-  const Result_14 = IDL.Variant({
+  const Result_16 = IDL.Variant({
     ok: MonthlyLeaderboardDTO,
-    err: Error2,
+    err: Error2
   });
   const GetPlayerDetailsDTO = IDL.Record({
     playerId: ClubId,
-    seasonId: SeasonId,
+    seasonId: SeasonId
   });
   const InjuryHistory = IDL.Record({
     description: IDL.Text,
     injuryStartDate: IDL.Int,
-    expectedEndDate: IDL.Int,
+    expectedEndDate: IDL.Int
   });
   const PlayerGameweekDTO = IDL.Record({
     fixtureId: FixtureId,
     events: IDL.Vec(PlayerEventData),
     number: IDL.Nat8,
-    points: IDL.Int16,
+    points: IDL.Int16
   });
   const ValueHistory = IDL.Record({
     oldValue: IDL.Nat16,
     changedOn: IDL.Int,
-    newValue: IDL.Nat16,
+    newValue: IDL.Nat16
   });
   const PlayerDetailDTO = IDL.Record({
     id: ClubId,
@@ -5726,12 +5272,12 @@ const idlFactory = ({ IDL }) => {
     shirtNumber: IDL.Nat8,
     position: PlayerPosition,
     lastName: IDL.Text,
-    firstName: IDL.Text,
+    firstName: IDL.Text
   });
-  const Result_13 = IDL.Variant({ ok: PlayerDetailDTO, err: Error2 });
+  const Result_15 = IDL.Variant({ ok: PlayerDetailDTO, err: Error2 });
   const GameweekFiltersDTO = IDL.Record({
     seasonId: SeasonId,
-    gameweek: GameweekNumber,
+    gameweek: GameweekNumber
   });
   const PlayerPointsDTO = IDL.Record({
     id: IDL.Nat16,
@@ -5739,11 +5285,11 @@ const idlFactory = ({ IDL }) => {
     events: IDL.Vec(PlayerEventData),
     position: PlayerPosition,
     gameweek: GameweekNumber,
-    points: IDL.Int16,
+    points: IDL.Int16
   });
-  const Result_12 = IDL.Variant({
+  const Result_14 = IDL.Variant({
     ok: IDL.Vec(PlayerPointsDTO),
-    err: Error2,
+    err: Error2
   });
   const PlayerScoreDTO = IDL.Record({
     id: IDL.Nat16,
@@ -5756,16 +5302,16 @@ const idlFactory = ({ IDL }) => {
     goalsConceded: IDL.Int16,
     events: IDL.Vec(PlayerEventData),
     position: PlayerPosition,
-    points: IDL.Int16,
+    points: IDL.Int16
   });
-  const Result_11 = IDL.Variant({
+  const Result_13 = IDL.Variant({
     ok: IDL.Vec(IDL.Tuple(IDL.Nat16, PlayerScoreDTO)),
-    err: Error2,
+    err: Error2
   });
   const GetSnapshotPlayers = IDL.Record({
     seasonId: SeasonId,
     gameweek: GameweekNumber,
-    leagueId: LeagueId,
+    leagueId: LeagueId
   });
   const ProfileDTO = IDL.Record({
     username: IDL.Text,
@@ -5774,9 +5320,9 @@ const idlFactory = ({ IDL }) => {
     favouriteClubId: IDL.Opt(ClubId),
     profilePicture: IDL.Opt(IDL.Vec(IDL.Nat8)),
     profilePictureType: IDL.Text,
-    principalId: IDL.Text,
+    principalId: IDL.Text
   });
-  const Result_9 = IDL.Variant({ ok: ProfileDTO, err: Error2 });
+  const Result_11 = IDL.Variant({ ok: ProfileDTO, err: Error2 });
   const RewardPool = IDL.Record({
     monthlyLeaderboardPool: IDL.Nat64,
     allTimeSeasonHighScorePool: IDL.Nat64,
@@ -5786,31 +5332,31 @@ const idlFactory = ({ IDL }) => {
     seasonLeaderboardPool: IDL.Nat64,
     allTimeWeeklyHighScorePool: IDL.Nat64,
     allTimeMonthlyHighScorePool: IDL.Nat64,
-    weeklyLeaderboardPool: IDL.Nat64,
+    weeklyLeaderboardPool: IDL.Nat64
   });
   const GetRewardPoolDTO = IDL.Record({
     seasonId: SeasonId,
-    rewardPool: RewardPool,
+    rewardPool: RewardPool
   });
-  const Result_8 = IDL.Variant({ ok: GetRewardPoolDTO, err: Error2 });
+  const Result_10 = IDL.Variant({ ok: GetRewardPoolDTO, err: Error2 });
   const GetSeasonLeaderboardDTO = IDL.Record({
     offset: IDL.Nat,
     seasonId: SeasonId,
     limit: IDL.Nat,
-    searchTerm: IDL.Text,
+    searchTerm: IDL.Text
   });
   const SeasonLeaderboardDTO = IDL.Record({
     totalEntries: IDL.Nat,
     seasonId: SeasonId,
-    entries: IDL.Vec(LeaderboardEntry),
+    entries: IDL.Vec(LeaderboardEntry)
   });
-  const Result_7 = IDL.Variant({ ok: SeasonLeaderboardDTO, err: Error2 });
+  const Result_9 = IDL.Variant({ ok: SeasonLeaderboardDTO, err: Error2 });
   const SeasonDTO = IDL.Record({
     id: SeasonId,
     name: IDL.Text,
-    year: IDL.Nat16,
+    year: IDL.Nat16
   });
-  const Result_6 = IDL.Variant({ ok: IDL.Vec(SeasonDTO), err: Error2 });
+  const Result_8 = IDL.Variant({ ok: IDL.Vec(SeasonDTO), err: Error2 });
   const SystemStateDTO = IDL.Record({
     pickTeamSeasonId: SeasonId,
     calculationGameweek: GameweekNumber,
@@ -5821,24 +5367,60 @@ const idlFactory = ({ IDL }) => {
     calculationMonth: CalendarMonth,
     calculationSeasonId: SeasonId,
     onHold: IDL.Bool,
-    seasonActive: IDL.Bool,
+    seasonActive: IDL.Bool
   });
-  const Result_5 = IDL.Variant({ ok: SystemStateDTO, err: Error2 });
-  const Result_4 = IDL.Variant({ ok: IDL.Nat, err: Error2 });
+  const Result_7 = IDL.Variant({ ok: SystemStateDTO, err: Error2 });
+  const Result_6 = IDL.Variant({ ok: IDL.Nat, err: Error2 });
+  const Result_4 = IDL.Variant({
+    ok: IDL.Vec(
+      IDL.Tuple(SeasonId, IDL.Vec(IDL.Tuple(GameweekNumber, CanisterId)))
+    ),
+    err: Error2
+  });
   const GetWeeklyLeaderboardDTO = IDL.Record({
     offset: IDL.Nat,
     seasonId: SeasonId,
     limit: IDL.Nat,
     searchTerm: IDL.Text,
-    gameweek: GameweekNumber,
+    gameweek: GameweekNumber
   });
   const WeeklyLeaderboardDTO = IDL.Record({
     totalEntries: IDL.Nat,
     seasonId: SeasonId,
     entries: IDL.Vec(LeaderboardEntry),
-    gameweek: GameweekNumber,
+    gameweek: GameweekNumber
   });
-  const Result_2 = IDL.Variant({ ok: WeeklyLeaderboardDTO, err: Error2 });
+  const Result_3 = IDL.Variant({ ok: WeeklyLeaderboardDTO, err: Error2 });
+  List_1.fill(IDL.Opt(IDL.Tuple(LeaderboardEntry, List_1)));
+  const WeeklyLeaderboard = IDL.Record({
+    totalEntries: IDL.Nat,
+    seasonId: SeasonId,
+    entries: List_1,
+    gameweek: GameweekNumber
+  });
+  const RewardType = IDL.Variant({
+    MonthlyLeaderboard: IDL.Null,
+    MostValuableTeam: IDL.Null,
+    MonthlyATHScore: IDL.Null,
+    WeeklyATHScore: IDL.Null,
+    SeasonATHScore: IDL.Null,
+    SeasonLeaderboard: IDL.Null,
+    WeeklyLeaderboard: IDL.Null,
+    HighestScoringPlayer: IDL.Null
+  });
+  const RewardEntry = IDL.Record({
+    rewardType: RewardType,
+    position: IDL.Nat,
+    amount: IDL.Nat64,
+    principalId: IDL.Text
+  });
+  List.fill(IDL.Opt(IDL.Tuple(RewardEntry, List)));
+  const WeeklyRewards = IDL.Record({
+    seasonId: SeasonId,
+    rewards: List,
+    gameweek: GameweekNumber
+  });
+  const Result_2 = IDL.Variant({ ok: WeeklyRewards, err: Error2 });
   const UsernameFilterDTO = IDL.Record({ username: IDL.Text });
   const UpdateTeamSelectionDTO = IDL.Record({
     playerIds: IDL.Vec(ClubId),
@@ -5861,12 +5443,32 @@ const idlFactory = ({ IDL }) => {
     prospectsGameweek: GameweekNumber,
     safeHandsGameweek: GameweekNumber,
     passMasterPlayerId: ClubId,
-    captainId: ClubId,
+    captainId: ClubId
+  });
+  const BlockIndex = IDL.Nat;
+  const Tokens = IDL.Nat;
+  const Timestamp = IDL.Nat64;
+  const TransferError = IDL.Variant({
+    GenericError: IDL.Record({
+      message: IDL.Text,
+      error_code: IDL.Nat
+    }),
+    TemporarilyUnavailable: IDL.Null,
+    BadBurn: IDL.Record({ min_burn_amount: Tokens }),
+    Duplicate: IDL.Record({ duplicate_of: BlockIndex }),
+    BadFee: IDL.Record({ expected_fee: Tokens }),
+    CreatedInFuture: IDL.Record({ ledger_time: Timestamp }),
+    TooOld: IDL.Null,
+    InsufficientFunds: IDL.Record({ balance: Tokens })
+  });
+  const TransferResult = IDL.Variant({
+    Ok: BlockIndex,
+    Err: TransferError
   });
   const UpdateFavouriteClubDTO = IDL.Record({ favouriteClubId: ClubId });
   const UpdateProfilePictureDTO = IDL.Record({
     profilePicture: IDL.Vec(IDL.Nat8),
-    extension: IDL.Text,
+    extension: IDL.Text
   });
   const UpdateSystemStateDTO = IDL.Record({
     pickTeamSeasonId: SeasonId,
@@ -5878,125 +5480,113 @@ const idlFactory = ({ IDL }) => {
     calculationMonth: CalendarMonth,
     calculationSeasonId: SeasonId,
     onHold: IDL.Bool,
-    seasonActive: IDL.Bool,
+    seasonActive: IDL.Bool
   });
   const UpdateUsernameDTO = IDL.Record({ username: IDL.Text });
   return IDL.Service({
     calculateGameweekScores: IDL.Func([], [Result], []),
     calculateLeaderboards: IDL.Func([], [Result], []),
-    getActiveLeaderboardCanisterId: IDL.Func([], [Result_21], []),
-    getClubs: IDL.Func([], [Result_20], ["composite_query"]),
-    getCountries: IDL.Func([], [Result_19], ["query"]),
-    getCurrentTeam: IDL.Func([], [Result_18], []),
-    getDataHashes: IDL.Func([], [Result_17], ["composite_query"]),
+    calculateWeeklyRewards: IDL.Func([GameweekNumber], [Result], []),
+    getActiveLeaderboardCanisterId: IDL.Func([], [Result_24], []),
+    getCanisters: IDL.Func([GetCanistersDTO], [Result_23], []),
+    getClubs: IDL.Func([], [Result_22], ["composite_query"]),
+    getCountries: IDL.Func([], [Result_21], ["query"]),
+    getCurrentTeam: IDL.Func([], [Result_20], []),
+    getDataHashes: IDL.Func([], [Result_19], ["composite_query"]),
     getFantasyTeamSnapshot: IDL.Func(
       [GetFantasyTeamSnapshotDTO],
-      [Result_16],
-      [],
+      [Result_18],
+      []
     ),
-    getFixtures: IDL.Func(
-      [RequestFixturesDTO],
-      [Result_10],
-      ["composite_query"],
-    ),
-    getLeaderboardCanisterIds: IDL.Func([], [Result_15], []),
+    getFixtures: IDL.Func([LeagueId], [Result_12], ["composite_query"]),
+    getLeaderboardCanisterIds: IDL.Func([], [Result_17], []),
     getLoanedPlayers: IDL.Func(
       [ClubFilterDTO],
-      [Result_3],
-      ["composite_query"],
+      [Result_5],
+      ["composite_query"]
     ),
     getManager: IDL.Func([RequestManagerDTO], [Result_1], []),
-    getManagerCanisterIds: IDL.Func([], [Result_15], []),
+    getManagerCanisterIds: IDL.Func([], [Result_17], []),
     getMonthlyLeaderboard: IDL.Func(
       [GetMonthlyLeaderboardDTO],
-      [Result_14],
-      [],
+      [Result_16],
+      []
     ),
-    getPlayerDetails: IDL.Func([GetPlayerDetailsDTO], [Result_13], []),
+    getPlayerDetails: IDL.Func([GetPlayerDetailsDTO], [Result_15], []),
     getPlayerDetailsForGameweek: IDL.Func(
       [GameweekFiltersDTO],
-      [Result_12],
-      ["composite_query"],
+      [Result_14],
+      ["composite_query"]
     ),
-    getPlayers: IDL.Func([], [Result_3], ["composite_query"]),
-    getPlayersMap: IDL.Func([GameweekFiltersDTO], [Result_11], []),
+    getPlayers: IDL.Func([], [Result_5], ["composite_query"]),
+    getPlayersMap: IDL.Func([GameweekFiltersDTO], [Result_13], []),
     getPlayersSnapshot: IDL.Func(
       [GetSnapshotPlayers],
       [IDL.Vec(PlayerDTO)],
-      ["query"],
+      ["query"]
     ),
-    getPostponedFixtures: IDL.Func([], [Result_10], ["composite_query"]),
-    getProfile: IDL.Func([], [Result_9], []),
+    getPostponedFixtures: IDL.Func([], [Result_12], ["composite_query"]),
+    getProfile: IDL.Func([], [Result_11], []),
     getRetiredPlayers: IDL.Func(
       [ClubFilterDTO],
-      [Result_3],
-      ["composite_query"],
+      [Result_5],
+      ["composite_query"]
     ),
-    getRewardPool: IDL.Func([GetRewardPoolDTO], [Result_8], []),
-    getSeasonLeaderboard: IDL.Func([GetSeasonLeaderboardDTO], [Result_7], []),
-    getSeasons: IDL.Func([], [Result_6], ["composite_query"]),
-    getSystemState: IDL.Func([], [Result_5], ["query"]),
-    getTotalManagers: IDL.Func([], [Result_4], ["query"]),
-    getVerifiedPlayers: IDL.Func([], [Result_3], []),
-    getWeeklyLeaderboard: IDL.Func([GetWeeklyLeaderboardDTO], [Result_2], []),
+    getRewardPool: IDL.Func([GetRewardPoolDTO], [Result_10], []),
+    getSeasonLeaderboard: IDL.Func([GetSeasonLeaderboardDTO], [Result_9], []),
+    getSeasons: IDL.Func([], [Result_8], ["composite_query"]),
+    getSystemState: IDL.Func([], [Result_7], ["query"]),
+    getTotalManagers: IDL.Func([], [Result_6], ["query"]),
+    getVerifiedPlayers: IDL.Func([], [Result_5], []),
+    getWeeklyCanisters: IDL.Func([], [Result_4], ["query"]),
+    getWeeklyLeaderboard: IDL.Func([GetWeeklyLeaderboardDTO], [Result_3], []),
+    getWeeklyLeaderboards: IDL.Func([], [IDL.Vec(WeeklyLeaderboard)], []),
+    getWeeklyRewards: IDL.Func(
+      [SeasonId, GameweekNumber],
+      [Result_2],
+      ["query"]
+    ),
     isUsernameValid: IDL.Func([UsernameFilterDTO], [IDL.Bool], ["query"]),
     notifyAppsOfLoan: IDL.Func([LeagueId, PlayerId], [Result], []),
     notifyAppsOfPositionChange: IDL.Func([LeagueId, PlayerId], [Result], []),
+    payWeeklyRewards: IDL.Func([GameweekNumber], [Result], []),
     saveFantasyTeam: IDL.Func([UpdateTeamSelectionDTO], [Result], []),
     searchUsername: IDL.Func([UsernameFilterDTO], [Result_1], []),
     snapshotManagers: IDL.Func([], [Result], []),
+    transferFPLToNewBackendCanister: IDL.Func([], [TransferResult], []),
     updateDataHashes: IDL.Func([IDL.Text], [Result], []),
     updateFavouriteClub: IDL.Func([UpdateFavouriteClubDTO], [Result], []),
     updateProfilePicture: IDL.Func([UpdateProfilePictureDTO], [Result], []),
     updateSystemState: IDL.Func([UpdateSystemStateDTO], [Result], []),
-    updateUsername: IDL.Func([UpdateUsernameDTO], [Result], []),
+    updateUsername: IDL.Func([UpdateUsernameDTO], [Result], [])
   });
 };
-var define_process_env_default$e = {
-  OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai",
-  OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai",
-  DFX_NETWORK: "ic",
-  CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai",
-  CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai",
-  TOTAL_GAMEWEEKS: 22,
-};
+var define_process_env_default$e = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
 const canisterId = define_process_env_default$e.CANISTER_ID_OPENWSL_BACKEND;
 const createActor = (canisterId2, options2 = {}) => {
   const agent = options2.agent || new HttpAgent({ ...options2.agentOptions });
   if (options2.agent && options2.agentOptions) {
     console.warn(
-      "Detected both agent and agentOptions passed to createActor. Ignoring agentOptions and proceeding with the provided agent.",
+      "Detected both agent and agentOptions passed to createActor. Ignoring agentOptions and proceeding with the provided agent."
     );
   }
   return Actor.createActor(idlFactory, {
     agent,
     canisterId: canisterId2,
-    ...options2.actorOptions,
+    ...options2.actorOptions
   });
 };
 canisterId ? createActor(canisterId) : void 0;
-var define_process_env_default$d = {
-  OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai",
-  OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai",
-  DFX_NETWORK: "ic",
-  CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai",
-  CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai",
-  TOTAL_GAMEWEEKS: 22,
-};
+var define_process_env_default$d = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
 class ActorFactory {
-  static createActor(
-    idlFactory2,
-    canisterId2 = "",
-    identity = null,
-    options2 = null,
-  ) {
+  static createActor(idlFactory2, canisterId2 = "", identity = null, options2 = null) {
     const hostOptions = {
       host: `https://${canisterId2}.icp-api.io`,
-      identity,
+      identity
     };
     if (!options2) {
       options2 = {
-        agentOptions: hostOptions,
+        agentOptions: hostOptions
       };
     } else if (!options2.agentOptions) {
       options2.agentOptions = hostOptions;
@@ -6007,17 +5597,17 @@ class ActorFactory {
     return Actor.createActor(idlFactory2, {
       agent,
       canisterId: canisterId2,
-      ...options2?.actorOptions,
+      ...options2?.actorOptions
     });
   }
   static getAgent(canisterId2 = "", identity = null, options2 = null) {
     const hostOptions = {
       host: `https://${canisterId2}.icp-api.io`,
-      identity,
+      identity
     };
     if (!options2) {
       options2 = {
-        agentOptions: hostOptions,
+        agentOptions: hostOptions
       };
     } else if (!options2.agentOptions) {
       options2.agentOptions = hostOptions;
@@ -6043,11 +5633,11 @@ class ActorFactory {
     let canisterId2 = define_process_env_default$d.CANISTER_ID_SNS_GOVERNANCE;
     const hostOptions = {
       host: `https://${canisterId2}.icp-api.io`,
-      identity,
+      identity
     };
     if (!options2) {
       options2 = {
-        agentOptions: hostOptions,
+        agentOptions: hostOptions
       };
     } else if (!options2.agentOptions) {
       options2.agentOptions = hostOptions;
@@ -6058,39 +5648,36 @@ class ActorFactory {
   }
 }
 var FixtureStatus = /* @__PURE__ */ ((FixtureStatus2) => {
-  FixtureStatus2[(FixtureStatus2["UNPLAYED"] = 0)] = "UNPLAYED";
-  FixtureStatus2[(FixtureStatus2["ACTIVE"] = 1)] = "ACTIVE";
-  FixtureStatus2[(FixtureStatus2["COMPLETED"] = 2)] = "COMPLETED";
-  FixtureStatus2[(FixtureStatus2["FINALISED"] = 3)] = "FINALISED";
+  FixtureStatus2[FixtureStatus2["UNPLAYED"] = 0] = "UNPLAYED";
+  FixtureStatus2[FixtureStatus2["ACTIVE"] = 1] = "ACTIVE";
+  FixtureStatus2[FixtureStatus2["COMPLETED"] = 2] = "COMPLETED";
+  FixtureStatus2[FixtureStatus2["FINALISED"] = 3] = "FINALISED";
   return FixtureStatus2;
 })(FixtureStatus || {});
 var PlayerEvent = /* @__PURE__ */ ((PlayerEvent2) => {
-  PlayerEvent2[(PlayerEvent2["Appearance"] = 0)] = "Appearance";
-  PlayerEvent2[(PlayerEvent2["Goal"] = 1)] = "Goal";
-  PlayerEvent2[(PlayerEvent2["GoalAssisted"] = 2)] = "GoalAssisted";
-  PlayerEvent2[(PlayerEvent2["GoalConceded"] = 3)] = "GoalConceded";
-  PlayerEvent2[(PlayerEvent2["KeeperSave"] = 4)] = "KeeperSave";
-  PlayerEvent2[(PlayerEvent2["CleanSheet"] = 5)] = "CleanSheet";
-  PlayerEvent2[(PlayerEvent2["PenaltySaved"] = 6)] = "PenaltySaved";
-  PlayerEvent2[(PlayerEvent2["PenaltyMissed"] = 7)] = "PenaltyMissed";
-  PlayerEvent2[(PlayerEvent2["YellowCard"] = 8)] = "YellowCard";
-  PlayerEvent2[(PlayerEvent2["RedCard"] = 9)] = "RedCard";
-  PlayerEvent2[(PlayerEvent2["OwnGoal"] = 10)] = "OwnGoal";
-  PlayerEvent2[(PlayerEvent2["HighestScoringPlayer"] = 11)] =
-    "HighestScoringPlayer";
+  PlayerEvent2[PlayerEvent2["Appearance"] = 0] = "Appearance";
+  PlayerEvent2[PlayerEvent2["Goal"] = 1] = "Goal";
+  PlayerEvent2[PlayerEvent2["GoalAssisted"] = 2] = "GoalAssisted";
+  PlayerEvent2[PlayerEvent2["GoalConceded"] = 3] = "GoalConceded";
+  PlayerEvent2[PlayerEvent2["KeeperSave"] = 4] = "KeeperSave";
+  PlayerEvent2[PlayerEvent2["CleanSheet"] = 5] = "CleanSheet";
+  PlayerEvent2[PlayerEvent2["PenaltySaved"] = 6] = "PenaltySaved";
+  PlayerEvent2[PlayerEvent2["PenaltyMissed"] = 7] = "PenaltyMissed";
+  PlayerEvent2[PlayerEvent2["YellowCard"] = 8] = "YellowCard";
+  PlayerEvent2[PlayerEvent2["RedCard"] = 9] = "RedCard";
+  PlayerEvent2[PlayerEvent2["OwnGoal"] = 10] = "OwnGoal";
+  PlayerEvent2[PlayerEvent2["HighestScoringPlayer"] = 11] = "HighestScoringPlayer";
   return PlayerEvent2;
 })(PlayerEvent || {});
 var Position = /* @__PURE__ */ ((Position2) => {
-  Position2[(Position2["GOALKEEPER"] = 0)] = "GOALKEEPER";
-  Position2[(Position2["DEFENDER"] = 1)] = "DEFENDER";
-  Position2[(Position2["MIDFIELDER"] = 2)] = "MIDFIELDER";
-  Position2[(Position2["FORWARD"] = 3)] = "FORWARD";
+  Position2[Position2["GOALKEEPER"] = 0] = "GOALKEEPER";
+  Position2[Position2["DEFENDER"] = 1] = "DEFENDER";
+  Position2[Position2["MIDFIELDER"] = 2] = "MIDFIELDER";
+  Position2[Position2["FORWARD"] = 3] = "FORWARD";
   return Position2;
 })(Position || {});
 function uint8ArrayToBase64(bytes) {
-  const binary = Array.from(bytes)
-    .map((byte) => String.fromCharCode(byte))
-    .join("");
+  const binary = Array.from(bytes).map((byte) => String.fromCharCode(byte)).join("");
   return btoa(binary);
 }
 function replacer(key2, value) {
@@ -6113,10 +5700,7 @@ function calculateAgeFromNanoseconds(nanoseconds) {
   const today = /* @__PURE__ */ new Date();
   let age = today.getFullYear() - birthDate.getFullYear();
   const monthDifference = today.getMonth() - birthDate.getMonth();
-  if (
-    monthDifference < 0 ||
-    (monthDifference === 0 && today.getDate() < birthDate.getDate())
-  ) {
+  if (monthDifference < 0 || monthDifference === 0 && today.getDate() < birthDate.getDate()) {
     age--;
   }
   return age;
@@ -6125,9 +5709,7 @@ function updateTableData(fixtures, teams, selectedGameweek) {
   let tempTable = {};
   teams.forEach((team) => initTeamData(team.id, tempTable, teams));
   const relevantFixtures = fixtures.filter(
-    (fixture) =>
-      convertFixtureStatus(fixture.fixture.status) === 3 &&
-      fixture.fixture.gameweek <= selectedGameweek,
+    (fixture) => convertFixtureStatus(fixture.fixture.status) === 3 && fixture.fixture.gameweek <= selectedGameweek
   );
   relevantFixtures.forEach(({ fixture, homeTeam, awayTeam }) => {
     if (!homeTeam || !awayTeam) return;
@@ -6177,7 +5759,7 @@ function initTeamData(teamId, table, teams) {
         losses: 0,
         goalsFor: 0,
         goalsAgainst: 0,
-        points: 0,
+        points: 0
       };
     }
   }
@@ -6209,22 +5791,8 @@ function isError(response) {
   return response && response.err !== void 0;
 }
 function extractPlayerData(playerPointsDTO, player) {
-  let goals = 0,
-    assists = 0,
-    redCards = 0,
-    yellowCards = 0,
-    missedPenalties = 0,
-    ownGoals = 0,
-    saves = 0,
-    cleanSheets = 0,
-    penaltySaves = 0,
-    goalsConceded = 0,
-    appearance = 0,
-    highestScoringPlayerId = 0;
-  let goalPoints = 0,
-    assistPoints = 0,
-    goalsConcededPoints = 0,
-    cleanSheetPoints = 0;
+  let goals = 0, assists = 0, redCards = 0, yellowCards = 0, missedPenalties = 0, ownGoals = 0, saves = 0, cleanSheets = 0, penaltySaves = 0, goalsConceded = 0, appearance = 0, highestScoringPlayerId = 0;
+  let goalPoints = 0, assistPoints = 0, goalsConcededPoints = 0, cleanSheetPoints = 0;
   playerPointsDTO.events.forEach((event) => {
     switch (convertEvent(event.eventType)) {
       case 0:
@@ -6260,10 +5828,7 @@ function extractPlayerData(playerPointsDTO, player) {
         break;
       case 3:
         goalsConceded += 1;
-        if (
-          convertPlayerPosition(playerPointsDTO.position) < 2 &&
-          goalsConceded % 2 === 0
-        ) {
+        if (convertPlayerPosition(playerPointsDTO.position) < 2 && goalsConceded % 2 === 0) {
           goalsConcededPoints += -15;
         }
         break;
@@ -6272,10 +5837,7 @@ function extractPlayerData(playerPointsDTO, player) {
         break;
       case 5:
         cleanSheets += 1;
-        if (
-          convertPlayerPosition(playerPointsDTO.position) < 2 &&
-          goalsConceded === 0
-        ) {
+        if (convertPlayerPosition(playerPointsDTO.position) < 2 && goalsConceded === 0) {
           cleanSheetPoints += 10;
         }
         break;
@@ -6322,7 +5884,7 @@ function extractPlayerData(playerPointsDTO, player) {
     bonusPoints: 0,
     totalPoints: 0,
     isCaptain: false,
-    nationalityId: player.nationality,
+    nationalityId: player.nationality
   };
   return playerGameweekDetails;
 }
@@ -6373,8 +5935,7 @@ function calculatePlayerScore(gameweekData, fixtures) {
         score += pointsForCleanSheet;
       }
       if (gameweekData.goalsConceded >= 2) {
-        score +=
-          Math.floor(gameweekData.goalsConceded / 2) * pointsForEach2Conceded;
+        score += Math.floor(gameweekData.goalsConceded / 2) * pointsForEach2Conceded;
       }
       break;
     case 1:
@@ -6384,8 +5945,7 @@ function calculatePlayerScore(gameweekData, fixtures) {
         score += pointsForCleanSheet;
       }
       if (gameweekData.goalsConceded >= 2) {
-        score +=
-          Math.floor(gameweekData.goalsConceded / 2) * pointsForEach2Conceded;
+        score += Math.floor(gameweekData.goalsConceded / 2) * pointsForEach2Conceded;
       }
       break;
     case 2:
@@ -6397,14 +5957,9 @@ function calculatePlayerScore(gameweekData, fixtures) {
       pointsForAssist = 10;
       break;
   }
-  const gameweekFixtures = fixtures
-    ? fixtures.filter((fixture) => fixture.gameweek === gameweekData.gameweek)
-    : [];
+  const gameweekFixtures = fixtures ? fixtures.filter((fixture) => fixture.gameweek === gameweekData.gameweek) : [];
   const playerFixtures = gameweekFixtures.filter(
-    (fixture) =>
-      (fixture.homeClubId === gameweekData.player.clubId ||
-        fixture.awayClubId === gameweekData.player.clubId) &&
-      fixture.highestScoringPlayerId === gameweekData.player.id,
+    (fixture) => (fixture.homeClubId === gameweekData.player.clubId || fixture.awayClubId === gameweekData.player.clubId) && fixture.highestScoringPlayerId === gameweekData.player.id
   );
   if (playerFixtures && playerFixtures.length > 0) {
     score += pointsForHighestScore * playerFixtures.length;
@@ -6439,87 +5994,45 @@ function calculateBonusPoints(gameweekData, fantasyTeam, points) {
       pointsForAssist = 10;
       break;
   }
-  if (
-    fantasyTeam.goalGetterGameweek === gameweekData.gameweek &&
-    fantasyTeam.goalGetterPlayerId === gameweekData.player.id
-  ) {
+  if (fantasyTeam.goalGetterGameweek === gameweekData.gameweek && fantasyTeam.goalGetterPlayerId === gameweekData.player.id) {
     bonusPoints = gameweekData.goals * pointsForGoal * 2;
   }
-  if (
-    fantasyTeam.passMasterGameweek === gameweekData.gameweek &&
-    fantasyTeam.passMasterPlayerId === gameweekData.player.id
-  ) {
+  if (fantasyTeam.passMasterGameweek === gameweekData.gameweek && fantasyTeam.passMasterPlayerId === gameweekData.player.id) {
     bonusPoints = gameweekData.assists * pointsForAssist * 2;
   }
-  if (
-    fantasyTeam.noEntryGameweek === gameweekData.gameweek &&
-    fantasyTeam.noEntryPlayerId === gameweekData.player.id &&
-    (convertPlayerPosition(gameweekData.player.position) === 0 ||
-      convertPlayerPosition(gameweekData.player.position) === 1) &&
-    gameweekData.cleanSheets
-  ) {
+  if (fantasyTeam.noEntryGameweek === gameweekData.gameweek && fantasyTeam.noEntryPlayerId === gameweekData.player.id && (convertPlayerPosition(gameweekData.player.position) === 0 || convertPlayerPosition(gameweekData.player.position) === 1) && gameweekData.cleanSheets) {
     bonusPoints = points * 2;
   }
-  if (
-    fantasyTeam.safeHandsGameweek === gameweekData.gameweek &&
-    convertPlayerPosition(gameweekData.player.position) === 0 &&
-    gameweekData.saves >= 5
-  ) {
+  if (fantasyTeam.safeHandsGameweek === gameweekData.gameweek && convertPlayerPosition(gameweekData.player.position) === 0 && gameweekData.saves >= 5) {
     bonusPoints = points * 2;
   }
-  if (
-    fantasyTeam.captainFantasticGameweek === gameweekData.gameweek &&
-    fantasyTeam.captainId === gameweekData.player.id &&
-    gameweekData.goals > 0
-  ) {
+  if (fantasyTeam.captainFantasticGameweek === gameweekData.gameweek && fantasyTeam.captainId === gameweekData.player.id && gameweekData.goals > 0) {
     bonusPoints = points;
   }
-  if (
-    fantasyTeam.oneNationGameweek === gameweekData.gameweek &&
-    fantasyTeam.oneNationCountryId === gameweekData.player.nationality
-  ) {
+  if (fantasyTeam.oneNationGameweek === gameweekData.gameweek && fantasyTeam.oneNationCountryId === gameweekData.player.nationality) {
     bonusPoints = points * 2;
   }
-  if (
-    fantasyTeam.prospectsGameweek === gameweekData.gameweek &&
-    calculateAgeFromNanoseconds(Number(gameweekData.player.dateOfBirth)) < 21
-  ) {
+  if (fantasyTeam.prospectsGameweek === gameweekData.gameweek && calculateAgeFromNanoseconds(Number(gameweekData.player.dateOfBirth)) < 21) {
     bonusPoints = points * 2;
   }
-  if (
-    fantasyTeam.braceBonusGameweek === gameweekData.gameweek &&
-    gameweekData.goals >= 2
-  ) {
+  if (fantasyTeam.braceBonusGameweek === gameweekData.gameweek && gameweekData.goals >= 2) {
     bonusPoints = points;
   }
-  if (
-    fantasyTeam.hatTrickHeroGameweek === gameweekData.gameweek &&
-    gameweekData.goals >= 3
-  ) {
+  if (fantasyTeam.hatTrickHeroGameweek === gameweekData.gameweek && gameweekData.goals >= 3) {
     bonusPoints = points * 2;
   }
-  if (
-    fantasyTeam.teamBoostGameweek === gameweekData.gameweek &&
-    gameweekData.player.clubId === fantasyTeam.teamBoostClubId
-  ) {
+  if (fantasyTeam.teamBoostGameweek === gameweekData.gameweek && gameweekData.player.clubId === fantasyTeam.teamBoostClubId) {
     bonusPoints = points;
   }
   return bonusPoints;
 }
-var define_process_env_default$c = {
-  OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai",
-  OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai",
-  DFX_NETWORK: "ic",
-  CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai",
-  CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai",
-  TOTAL_GAMEWEEKS: 22,
-};
+var define_process_env_default$c = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
 class FixtureService {
   actor;
   constructor() {
     this.actor = ActorFactory.createActor(
       idlFactory,
-      define_process_env_default$c.OPENWSL_BACKEND_CANISTER_ID,
+      define_process_env_default$c.OPENWSL_BACKEND_CANISTER_ID
     );
   }
   async getPostponedFixtures() {
@@ -6530,7 +6043,7 @@ class FixtureService {
   async getFixtures(seasonId) {
     let dto = {
       leagueId: 2,
-      seasonId,
+      seasonId
     };
     const result = await this.actor.getFixtures(dto);
     if (isError(result)) throw new Error("Failed to fetch fixtures");
@@ -6552,14 +6065,14 @@ function createFixtureStore() {
     }
     const now = /* @__PURE__ */ new Date();
     return fixtures.find(
-      (fixture) => new Date(Number(fixture.kickOff) / 1e6) > now,
+      (fixture) => new Date(Number(fixture.kickOff) / 1e6) > now
     );
   }
   return {
     subscribe,
     setFixtures: (fixtures) => set2(fixtures),
     getNextFixture,
-    getPostponedFixtures,
+    getPostponedFixtures
   };
 }
 const fixtureStore = createFixtureStore();
@@ -6567,18 +6080,11 @@ function createClubStore() {
   const { subscribe, set: set2 } = writable([]);
   return {
     subscribe,
-    setClubs: (clubs) => set2(clubs),
+    setClubs: (clubs) => set2(clubs)
   };
 }
 const clubStore = createClubStore();
-var define_process_env_default$b = {
-  OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai",
-  OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai",
-  DFX_NETWORK: "ic",
-  CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai",
-  CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai",
-  TOTAL_GAMEWEEKS: 22,
-};
+var define_process_env_default$b = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
 function createManagerStore() {
   const { subscribe, set: set2 } = writable(null);
   let systemState;
@@ -6587,7 +6093,7 @@ function createManagerStore() {
   });
   let actor = ActorFactory.createActor(
     idlFactory,
-    define_process_env_default$b.OPENWSL_BACKEND_CANISTER_ID,
+    define_process_env_default$b.OPENWSL_BACKEND_CANISTER_ID
   );
   let newManager = {
     playerIds: [],
@@ -6621,7 +6127,7 @@ function createManagerStore() {
     captainId: 0,
     monthlyBonusesAvailable: 0,
     canisterId: "",
-    firstGameweek: false,
+    firstGameweek: false
   };
   async function getPublicProfile(principalId) {
     try {
@@ -6630,7 +6136,7 @@ function createManagerStore() {
         month: 0,
         seasonId: systemState.calculationSeasonId,
         gameweek: 0,
-        clubId: 0,
+        clubId: 0
       };
       let result = await actor.getManager(dto);
       if (isError(result)) {
@@ -6661,7 +6167,7 @@ function createManagerStore() {
       let dto = {
         managerPrincipalId: managerId,
         gameweek,
-        seasonId,
+        seasonId
       };
       let result = await actor.getFantasyTeamSnapshot(dto);
       if (isError(result)) {
@@ -6677,7 +6183,7 @@ function createManagerStore() {
     try {
       const identityActor = await ActorFactory.createIdentityActor(
         authStore,
-        define_process_env_default$b.OPENWSL_BACKEND_CANISTER_ID ?? "",
+        define_process_env_default$b.OPENWSL_BACKEND_CANISTER_ID ?? ""
       );
       const result = await identityActor.getCurrentTeam();
       if (isError(result)) {
@@ -6690,12 +6196,7 @@ function createManagerStore() {
       throw error;
     }
   }
-  async function saveFantasyTeam(
-    userFantasyTeam,
-    activeGameweek,
-    bonusUsedInSession,
-    transferWindowPlayedInSession,
-  ) {
+  async function saveFantasyTeam(userFantasyTeam, activeGameweek, bonusUsedInSession, transferWindowPlayedInSession) {
     try {
       let bonusPlayed = 0;
       let bonusPlayerId = 0;
@@ -6709,52 +6210,30 @@ function createManagerStore() {
       }
       const identityActor = await ActorFactory.createIdentityActor(
         authStore,
-        define_process_env_default$b.OPENWSL_BACKEND_CANISTER_ID ?? "",
+        define_process_env_default$b.OPENWSL_BACKEND_CANISTER_ID ?? ""
       );
       let dto = {
         playerIds: userFantasyTeam.playerIds,
         captainId: userFantasyTeam.captainId,
-        goalGetterGameweek:
-          bonusPlayed == 1
-            ? activeGameweek
-            : userFantasyTeam.goalGetterGameweek,
+        goalGetterGameweek: bonusPlayed == 1 ? activeGameweek : userFantasyTeam.goalGetterGameweek,
         goalGetterPlayerId: bonusPlayerId,
-        passMasterGameweek:
-          bonusPlayed == 2
-            ? activeGameweek
-            : userFantasyTeam.passMasterGameweek,
+        passMasterGameweek: bonusPlayed == 2 ? activeGameweek : userFantasyTeam.passMasterGameweek,
         passMasterPlayerId: bonusPlayerId,
-        noEntryGameweek:
-          bonusPlayed == 3 ? activeGameweek : userFantasyTeam.noEntryGameweek,
+        noEntryGameweek: bonusPlayed == 3 ? activeGameweek : userFantasyTeam.noEntryGameweek,
         noEntryPlayerId: bonusPlayerId,
-        teamBoostGameweek:
-          bonusPlayed == 4 ? activeGameweek : userFantasyTeam.teamBoostGameweek,
+        teamBoostGameweek: bonusPlayed == 4 ? activeGameweek : userFantasyTeam.teamBoostGameweek,
         teamBoostClubId: bonusTeamId,
-        safeHandsGameweek:
-          bonusPlayed == 5 ? activeGameweek : userFantasyTeam.safeHandsGameweek,
+        safeHandsGameweek: bonusPlayed == 5 ? activeGameweek : userFantasyTeam.safeHandsGameweek,
         safeHandsPlayerId: bonusPlayerId,
-        captainFantasticGameweek:
-          bonusPlayed == 6
-            ? activeGameweek
-            : userFantasyTeam.captainFantasticGameweek,
+        captainFantasticGameweek: bonusPlayed == 6 ? activeGameweek : userFantasyTeam.captainFantasticGameweek,
         captainFantasticPlayerId: bonusPlayerId,
-        oneNationGameweek:
-          bonusPlayed == 7 ? activeGameweek : userFantasyTeam.oneNationGameweek,
+        oneNationGameweek: bonusPlayed == 7 ? activeGameweek : userFantasyTeam.oneNationGameweek,
         oneNationCountryId: bonusCountryId,
-        prospectsGameweek:
-          bonusPlayed == 8 ? activeGameweek : userFantasyTeam.prospectsGameweek,
-        braceBonusGameweek:
-          bonusPlayed == 9
-            ? activeGameweek
-            : userFantasyTeam.braceBonusGameweek,
-        hatTrickHeroGameweek:
-          bonusPlayed == 10
-            ? activeGameweek
-            : userFantasyTeam.hatTrickHeroGameweek,
-        transferWindowGameweek: transferWindowPlayedInSession
-          ? activeGameweek
-          : userFantasyTeam.transferWindowGameweek,
-        username: userFantasyTeam.username,
+        prospectsGameweek: bonusPlayed == 8 ? activeGameweek : userFantasyTeam.prospectsGameweek,
+        braceBonusGameweek: bonusPlayed == 9 ? activeGameweek : userFantasyTeam.braceBonusGameweek,
+        hatTrickHeroGameweek: bonusPlayed == 10 ? activeGameweek : userFantasyTeam.hatTrickHeroGameweek,
+        transferWindowGameweek: transferWindowPlayedInSession ? activeGameweek : userFantasyTeam.transferWindowGameweek,
+        username: userFantasyTeam.username
       };
       let result = await identityActor.saveFantasyTeam(dto);
       if (isError(result)) {
@@ -6841,7 +6320,7 @@ function createManagerStore() {
     getFantasyTeamForGameweek,
     getCurrentTeam,
     saveFantasyTeam,
-    getPublicProfile,
+    getPublicProfile
   };
 }
 createManagerStore();
@@ -6857,16 +6336,9 @@ function WalletIcon($$payload, $$props) {
 }
 const authSignedInStore = derived(
   authStore,
-  ({ identity }) => identity !== null && identity !== void 0,
+  ({ identity }) => identity !== null && identity !== void 0
 );
-var define_process_env_default$a = {
-  OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai",
-  OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai",
-  DFX_NETWORK: "ic",
-  CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai",
-  CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai",
-  TOTAL_GAMEWEEKS: 22,
-};
+var define_process_env_default$a = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
 function createUserStore() {
   const { subscribe, set: set2 } = writable(null);
   async function sync() {
@@ -6887,10 +6359,10 @@ function createUserStore() {
     try {
       const identityActor = await ActorFactory.createIdentityActor(
         authStore,
-        define_process_env_default$a.OPENWSL_BACKEND_CANISTER_ID ?? "",
+        define_process_env_default$a.OPENWSL_BACKEND_CANISTER_ID ?? ""
       );
       let dto = {
-        username,
+        username
       };
       const result = await identityActor.updateUsername(dto);
       if (isError(result)) {
@@ -6908,10 +6380,10 @@ function createUserStore() {
     try {
       const identityActor = await ActorFactory.createIdentityActor(
         authStore,
-        define_process_env_default$a.OPENWSL_BACKEND_CANISTER_ID ?? "",
+        define_process_env_default$a.OPENWSL_BACKEND_CANISTER_ID ?? ""
       );
       let dto = {
-        favouriteClubId: favouriteTeamId,
+        favouriteClubId: favouriteTeamId
       };
       const result = await identityActor.updateFavouriteClub(dto);
       if (isError(result)) {
@@ -6940,11 +6412,11 @@ function createUserStore() {
         try {
           const identityActor = await ActorFactory.createIdentityActor(
             authStore,
-            define_process_env_default$a.OPENWSL_BACKEND_CANISTER_ID ?? "",
+            define_process_env_default$a.OPENWSL_BACKEND_CANISTER_ID ?? ""
           );
           let dto = {
             profilePicture: uint8Array,
-            extension,
+            extension
           };
           const result = await identityActor.updateProfilePicture(dto);
           if (isError(result)) {
@@ -6970,17 +6442,17 @@ function createUserStore() {
   async function isUsernameAvailable(username) {
     const identityActor = await ActorFactory.createIdentityActor(
       authStore,
-      define_process_env_default$a.OPENWSL_BACKEND_CANISTER_ID,
+      define_process_env_default$a.OPENWSL_BACKEND_CANISTER_ID
     );
     let dto = {
-      username,
+      username
     };
     return await identityActor.isUsernameValid(dto);
   }
   async function cacheProfile() {
     const identityActor = await ActorFactory.createIdentityActor(
       authStore,
-      define_process_env_default$a.OPENWSL_BACKEND_CANISTER_ID,
+      define_process_env_default$a.OPENWSL_BACKEND_CANISTER_ID
     );
     let getProfileResponse = await identityActor.getProfile();
     let error = isError(getProfileResponse);
@@ -7004,27 +6476,24 @@ function createUserStore() {
       const agent = await createAgent({
         identity,
         host: void 0,
-        fetchRootKey: define_process_env_default$a.DFX_NETWORK === "local",
+        fetchRootKey: define_process_env_default$a.DFX_NETWORK === "local"
       });
       const { transfer } = IcrcLedgerCanister.create({
         agent,
-        canisterId:
-          define_process_env_default$a.DFX_NETWORK === "ic"
-            ? Principal.fromText("ddsp7-7iaaa-aaaaq-aacqq-cai")
-            : Principal.fromText("avqkn-guaaa-aaaaa-qaaea-cai"),
+        canisterId: define_process_env_default$a.DFX_NETWORK === "ic" ? Principal.fromText("ddsp7-7iaaa-aaaaq-aacqq-cai") : Principal.fromText("avqkn-guaaa-aaaaa-qaaea-cai")
       });
       if (principalId) {
         try {
           let transfer_result = await transfer({
             to: {
               owner: Principal.fromText(withdrawalAddress),
-              subaccount: [],
+              subaccount: []
             },
             fee: 100000n,
             memo: new Uint8Array(Text$1.encodeValue("0")),
             from_subaccount: void 0,
             created_at_time: BigInt(Date.now()) * BigInt(1e6),
-            amount: withdrawalAmount - 100000n,
+            amount: withdrawalAmount - 100000n
           });
         } catch (err) {
           console.error(err.errorType);
@@ -7047,17 +6516,17 @@ function createUserStore() {
     const agent = await createAgent({
       identity,
       host: void 0,
-      fetchRootKey: define_process_env_default$a.DFX_NETWORK === "local",
+      fetchRootKey: define_process_env_default$a.DFX_NETWORK === "local"
     });
     const { balance } = IcrcLedgerCanister.create({
       agent,
-      canisterId: Principal.fromText("ddsp7-7iaaa-aaaaq-aacqq-cai"),
+      canisterId: Principal.fromText("ddsp7-7iaaa-aaaaq-aacqq-cai")
     });
     if (principalId) {
       try {
         let result = await balance({
           owner: principalId,
-          certified: false,
+          certified: false
         });
         return result;
       } catch (err) {
@@ -7075,48 +6544,49 @@ function createUserStore() {
     isUsernameAvailable,
     cacheProfile,
     withdrawFPL,
-    getFPLBalance,
+    getFPLBalance
   };
 }
 const userStore = createUserStore();
-const userGetProfilePicture = derived(userStore, ($user) => {
-  try {
-    let byteArray;
-    if ($user && $user.profilePicture) {
-      if (
-        Array.isArray($user.profilePicture) &&
-        $user.profilePicture[0] instanceof Uint8Array
-      ) {
-        byteArray = $user.profilePicture[0];
-        return `data:image/${$user.profilePictureType};base64,${uint8ArrayToBase64(byteArray)}`;
-      } else if ($user.profilePicture instanceof Uint8Array) {
-        return `data:${$user.profilePictureType};base64,${uint8ArrayToBase64(
-          $user.profilePicture,
-        )}`;
-      } else {
-        if (typeof $user.profilePicture === "string") {
-          if ($user.profilePicture.startsWith("data:image")) {
-            return $user.profilePicture;
-          } else {
-            return `data:${$user.profilePictureType};base64,${$user.profilePicture}`;
+const userGetProfilePicture = derived(
+  userStore,
+  ($user) => {
+    try {
+      let byteArray;
+      if ($user && $user.profilePicture) {
+        if (Array.isArray($user.profilePicture) && $user.profilePicture[0] instanceof Uint8Array) {
+          byteArray = $user.profilePicture[0];
+          return `data:image/${$user.profilePictureType};base64,${uint8ArrayToBase64(byteArray)}`;
+        } else if ($user.profilePicture instanceof Uint8Array) {
+          return `data:${$user.profilePictureType};base64,${uint8ArrayToBase64(
+            $user.profilePicture
+          )}`;
+        } else {
+          if (typeof $user.profilePicture === "string") {
+            if ($user.profilePicture.startsWith("data:image")) {
+              return $user.profilePicture;
+            } else {
+              return `data:${$user.profilePictureType};base64,${$user.profilePicture}`;
+            }
           }
         }
       }
+      return "/profile_placeholder.png";
+    } catch (error) {
+      console.error(error);
+      return "/profile_placeholder.png";
     }
-    return "/profile_placeholder.png";
-  } catch (error) {
-    console.error(error);
-    return "/profile_placeholder.png";
   }
-});
-derived(userStore, (user) =>
-  user !== null && user !== void 0 ? user.favouriteTeamId : 0,
+);
+derived(
+  userStore,
+  (user) => user !== null && user !== void 0 ? user.favouriteTeamId : 0
 );
 function createCountryStore() {
   const { subscribe, set: set2 } = writable([]);
   return {
     subscribe,
-    setCountries: (countries) => set2(countries),
+    setCountries: (countries) => set2(countries)
   };
 }
 const countryStore = createCountryStore();
@@ -7139,24 +6609,17 @@ function createSeasonStore() {
   return {
     subscribe,
     setSeasons: (seasons) => set2(seasons),
-    getSeasonName,
+    getSeasonName
   };
 }
 const seasonStore = createSeasonStore();
-var define_process_env_default$9 = {
-  OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai",
-  OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai",
-  DFX_NETWORK: "ic",
-  CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai",
-  CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai",
-  TOTAL_GAMEWEEKS: 22,
-};
+var define_process_env_default$9 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
 class PlayerService {
   actor;
   constructor() {
     this.actor = ActorFactory.createActor(
       idlFactory,
-      define_process_env_default$9.OPENWSL_BACKEND_CANISTER_ID,
+      define_process_env_default$9.OPENWSL_BACKEND_CANISTER_ID
     );
   }
   async getPlayers() {
@@ -7189,24 +6652,17 @@ function createPlayerStore() {
     subscribe,
     setPlayers: (players) => set2(players),
     getLoanedPlayers,
-    getRetiredPlayers,
+    getRetiredPlayers
   };
 }
 const playerStore = createPlayerStore();
-var define_process_env_default$8 = {
-  OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai",
-  OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai",
-  DFX_NETWORK: "ic",
-  CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai",
-  CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai",
-  TOTAL_GAMEWEEKS: 22,
-};
+var define_process_env_default$8 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
 class PlayerEventsService {
   actor;
   constructor() {
     this.actor = ActorFactory.createActor(
       idlFactory,
-      define_process_env_default$8.OPENWSL_BACKEND_CANISTER_ID,
+      define_process_env_default$8.OPENWSL_BACKEND_CANISTER_ID
     );
   }
   async getPlayerDetailsForGameweek() {
@@ -7219,12 +6675,12 @@ class PlayerEventsService {
     }
     let dto = {
       seasonId: systemState.calculationSeasonId,
-      gameweek: systemState.calculationGameweek,
+      gameweek: systemState.calculationGameweek
     };
     const result = await this.actor.getPlayerDetailsForGameweek(dto);
     if (isError(result))
       throw new Error(
-        "Failed to fetch player details for gameweek in player events service",
+        "Failed to fetch player details for gameweek in player events service"
       );
     return result.ok;
   }
@@ -7232,7 +6688,7 @@ class PlayerEventsService {
     try {
       let dto = {
         playerId,
-        seasonId,
+        seasonId
       };
       let result = await this.actor.getPlayerDetails(dto);
       if (isError(result)) {
@@ -7248,7 +6704,7 @@ class PlayerEventsService {
     try {
       let dto = {
         seasonId,
-        gameweek,
+        gameweek
       };
       let result = await this.actor.getPlayerDetailsForGameweek(dto);
       if (isError(result)) {
@@ -7283,35 +6739,31 @@ function createPlayerEventsStore() {
         pickTeamMonth: result.pickTeamMonth,
         calculationSeasonId: result.calculationSeasonId,
         onHold: result.onHold,
-        seasonActive: result.seasonActive,
+        seasonActive: result.seasonActive
       };
     });
     if (systemState == null) {
       throw new Error("Failed to subscribe to system store");
     }
-    if (
-      systemState.calculationSeasonId === seasonId &&
-      systemState.calculationGameweek === gameweek
-    ) {
+    if (systemState.calculationSeasonId === seasonId && systemState.calculationGameweek === gameweek) {
       allPlayerEvents = await getPlayerEventsFromLocalStorage();
     } else {
       allPlayerEvents = await getPlayerEventsFromBackend(seasonId, gameweek);
     }
     let allPlayers = [];
     const unsubscribe = playerStore.subscribe((players) => {
-      allPlayers = players.filter((player) =>
-        fantasyTeam.playerIds.includes(player.id),
+      allPlayers = players.filter(
+        (player) => fantasyTeam.playerIds.includes(player.id)
       );
     });
     unsubscribe();
     let gameweekData = await Promise.all(
       allPlayers.map(
-        async (player) =>
-          await extractPlayerData(
-            allPlayerEvents.find((x) => x.id == player.id),
-            player,
-          ),
-      ),
+        async (player) => await extractPlayerData(
+          allPlayerEvents.find((x) => x.id == player.id),
+          player
+        )
+      )
     );
     let allFixtures = [];
     const unsubscribeFixtures = fixtureStore.subscribe((fixtures) => {
@@ -7321,13 +6773,12 @@ function createPlayerEventsStore() {
     const playersWithPoints = gameweekData.map((entry) => {
       const score = calculatePlayerScore(entry, allFixtures);
       const bonusPoints = calculateBonusPoints(entry, fantasyTeam, score);
-      const captainPoints =
-        entry.player.id === fantasyTeam.captainId ? score + bonusPoints : 0;
+      const captainPoints = entry.player.id === fantasyTeam.captainId ? score + bonusPoints : 0;
       return {
         ...entry,
         points: score,
         bonusPoints,
-        totalPoints: score + bonusPoints + captainPoints,
+        totalPoints: score + bonusPoints + captainPoints
       };
     });
     return await Promise.all(playersWithPoints);
@@ -7350,24 +6801,17 @@ function createPlayerEventsStore() {
     setPlayerEvents: (players) => set2(players),
     getPlayerDetails,
     getGameweekPlayers,
-    getPlayerEventsFromBackend,
+    getPlayerEventsFromBackend
   };
 }
 const playerEventsStore = createPlayerEventsStore();
-var define_process_env_default$7 = {
-  OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai",
-  OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai",
-  DFX_NETWORK: "ic",
-  CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai",
-  CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai",
-  TOTAL_GAMEWEEKS: 22,
-};
+var define_process_env_default$7 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
 class WeeklyLeaderboardService {
   actor;
   constructor() {
     this.actor = ActorFactory.createActor(
       idlFactory,
-      define_process_env_default$7.OPENWSL_BACKEND_CANISTER_ID,
+      define_process_env_default$7.OPENWSL_BACKEND_CANISTER_ID
     );
   }
   async getWeeklyLeaderboard(offset, seasonId, limit, gameweek) {
@@ -7376,7 +6820,7 @@ class WeeklyLeaderboardService {
       seasonId,
       limit: BigInt(limit),
       searchTerm: "",
-      gameweek,
+      gameweek
     };
     const result = await this.actor.getWeeklyLeaderboard(dto);
     if (isError(result)) throw new Error("Failed to fetch countries");
@@ -7390,30 +6834,23 @@ function createWeeklyLeaderboardStore() {
       offset,
       seasonId,
       page2,
-      gameweek,
+      gameweek
     );
   }
   return {
     subscribe,
     setWeeklyLeaderboard: (leaderboard) => set2(leaderboard),
-    getWeeklyLeaderboard,
+    getWeeklyLeaderboard
   };
 }
 const weeklyLeaderboardStore = createWeeklyLeaderboardStore();
-var define_process_env_default$6 = {
-  OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai",
-  OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai",
-  DFX_NETWORK: "ic",
-  CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai",
-  CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai",
-  TOTAL_GAMEWEEKS: 22,
-};
+var define_process_env_default$6 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
 class DataHashService {
   actor;
   constructor() {
     this.actor = ActorFactory.createActor(
       idlFactory,
-      define_process_env_default$6.OPENWSL_BACKEND_CANISTER_ID,
+      define_process_env_default$6.OPENWSL_BACKEND_CANISTER_ID
     );
   }
   async getDataHashes() {
@@ -7422,20 +6859,13 @@ class DataHashService {
     return result.ok;
   }
 }
-var define_process_env_default$5 = {
-  OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai",
-  OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai",
-  DFX_NETWORK: "ic",
-  CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai",
-  CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai",
-  TOTAL_GAMEWEEKS: 22,
-};
+var define_process_env_default$5 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
 class CountryService {
   actor;
   constructor() {
     this.actor = ActorFactory.createActor(
       idlFactory,
-      define_process_env_default$5.OPENWSL_BACKEND_CANISTER_ID,
+      define_process_env_default$5.OPENWSL_BACKEND_CANISTER_ID
     );
   }
   async getCountries() {
@@ -7444,20 +6874,13 @@ class CountryService {
     return result.ok;
   }
 }
-var define_process_env_default$4 = {
-  OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai",
-  OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai",
-  DFX_NETWORK: "ic",
-  CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai",
-  CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai",
-  TOTAL_GAMEWEEKS: 22,
-};
+var define_process_env_default$4 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
 class SystemService {
   actor;
   constructor() {
     this.actor = ActorFactory.createActor(
       idlFactory,
-      define_process_env_default$4.OPENWSL_BACKEND_CANISTER_ID,
+      define_process_env_default$4.OPENWSL_BACKEND_CANISTER_ID
     );
   }
   async getSystemState() {
@@ -7466,20 +6889,13 @@ class SystemService {
     return result.ok;
   }
 }
-var define_process_env_default$3 = {
-  OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai",
-  OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai",
-  DFX_NETWORK: "ic",
-  CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai",
-  CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai",
-  TOTAL_GAMEWEEKS: 22,
-};
+var define_process_env_default$3 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
 class SeasonService {
   actor;
   constructor() {
     this.actor = ActorFactory.createActor(
       idlFactory,
-      define_process_env_default$3.OPENWSL_BACKEND_CANISTER_ID,
+      define_process_env_default$3.OPENWSL_BACKEND_CANISTER_ID
     );
   }
   async getSeasons() {
@@ -7488,20 +6904,13 @@ class SeasonService {
     return result.ok;
   }
 }
-var define_process_env_default$2 = {
-  OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai",
-  OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai",
-  DFX_NETWORK: "ic",
-  CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai",
-  CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai",
-  TOTAL_GAMEWEEKS: 22,
-};
+var define_process_env_default$2 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
 class ClubService {
   actor;
   constructor() {
     this.actor = ActorFactory.createActor(
       idlFactory,
-      define_process_env_default$2.OPENWSL_BACKEND_CANISTER_ID,
+      define_process_env_default$2.OPENWSL_BACKEND_CANISTER_ID
     );
   }
   async getClubs() {
@@ -7527,7 +6936,7 @@ class StoreManager {
     "clubs",
     "players",
     "player_events",
-    "fixtures",
+    "fixtures"
   ];
   constructor() {
     this.dataHashService = new DataHashService();
@@ -7548,9 +6957,7 @@ class StoreManager {
       return;
     }
     for (const category of this.categories) {
-      const categoryHash = newHashes.find(
-        (hash2) => hash2.category === category,
-      );
+      const categoryHash = newHashes.find((hash2) => hash2.category === category);
       if (categoryHash?.hash !== localStorage.getItem(`${category}_hash`)) {
         await this.syncCategory(category);
         localStorage.setItem(`${category}_hash`, categoryHash?.hash || "");
@@ -7566,7 +6973,7 @@ class StoreManager {
         countryStore.setCountries(updatedCountries);
         localStorage.setItem(
           "countries",
-          JSON.stringify(updatedCountries, replacer),
+          JSON.stringify(updatedCountries, replacer)
         );
         break;
       case "system_state":
@@ -7574,7 +6981,7 @@ class StoreManager {
         systemStore.setSystemState(updatedSystemState);
         localStorage.setItem(
           "system_state",
-          JSON.stringify(updatedSystemState, replacer),
+          JSON.stringify(updatedSystemState, replacer)
         );
         break;
       case "seasons":
@@ -7582,7 +6989,7 @@ class StoreManager {
         seasonStore.setSeasons(updatedSeasons);
         localStorage.setItem(
           "seasons",
-          JSON.stringify(updatedSeasons, replacer),
+          JSON.stringify(updatedSeasons, replacer)
         );
         break;
       case "clubs":
@@ -7595,43 +7002,41 @@ class StoreManager {
         playerStore.setPlayers(updatedPlayers);
         localStorage.setItem(
           "players",
-          JSON.stringify(updatedPlayers, replacer),
+          JSON.stringify(updatedPlayers, replacer)
         );
         break;
       case "player_events":
-        const updatedPlayerEvents =
-          await this.playerEventsService.getPlayerDetailsForGameweek();
+        const updatedPlayerEvents = await this.playerEventsService.getPlayerDetailsForGameweek();
         playerEventsStore.setPlayerEvents(updatedPlayerEvents);
         localStorage.setItem(
           "player_events",
-          JSON.stringify(updatedPlayerEvents, replacer),
+          JSON.stringify(updatedPlayerEvents, replacer)
         );
         break;
       case "fixtures":
         systemStore.subscribe(async (systemState) => {
           const updatedFixtures = await this.fixtureService.getFixtures(
-            systemState?.calculationSeasonId ?? 0,
+            systemState?.calculationSeasonId ?? 0
           );
           fixtureStore.setFixtures(updatedFixtures);
           localStorage.setItem(
             "fixtures",
-            JSON.stringify(updatedFixtures, replacer),
+            JSON.stringify(updatedFixtures, replacer)
           );
         });
         break;
       case "weekly_leaderboard":
         systemStore.subscribe(async (systemState) => {
-          const updatedWeeklyLeaderboard =
-            await this.weeklyLeaderboardService.getWeeklyLeaderboard(
-              0,
-              systemState?.calculationSeasonId ?? 0,
-              0,
-              systemState?.calculationGameweek ?? 0,
-            );
+          const updatedWeeklyLeaderboard = await this.weeklyLeaderboardService.getWeeklyLeaderboard(
+            0,
+            systemState?.calculationSeasonId ?? 0,
+            0,
+            systemState?.calculationGameweek ?? 0
+          );
           weeklyLeaderboardStore.setWeeklyLeaderboard(updatedWeeklyLeaderboard);
           localStorage.setItem(
             "weekly_leaderboard",
-            JSON.stringify(updatedWeeklyLeaderboard, replacer),
+            JSON.stringify(updatedWeeklyLeaderboard, replacer)
           );
         });
         break;
@@ -7685,32 +7090,21 @@ function Header($$payload, $$props) {
   function closeDropdownOnClickOutside(event) {
     const target = event.target;
     if (target instanceof Element) {
-      if (
-        !target.closest(".profile-dropdown") &&
-        !target.closest(".profile-pic")
-      ) {
+      if (!target.closest(".profile-dropdown") && !target.closest(".profile-pic")) {
         showProfileDropdown = false;
       }
     }
   }
-  currentClass = (route) =>
-    store_get(($$store_subs ??= {}), "$page", page).url.pathname === route
-      ? "text-blue-500 nav-underline active"
-      : "nav-underline";
-  currentBorder = (route) =>
-    store_get(($$store_subs ??= {}), "$page", page).url.pathname === route
-      ? "active-border"
-      : "";
+  currentClass = (route) => store_get($$store_subs ??= {}, "$page", page).url.pathname === route ? "text-blue-500 nav-underline active" : "nav-underline";
+  currentBorder = (route) => store_get($$store_subs ??= {}, "$page", page).url.pathname === route ? "active-border" : "";
   $$payload.out += `<header><nav class="text-white"><div class="px-4 h-16 flex justify-between items-center w-full"><a href="/" class="hover:text-gray-400 flex items-center">`;
   OpenFPLIcon($$payload, { className: "h-8 w-auto" });
   $$payload.out += `<!----><b class="ml-2">OpenWSL</b></a> <button class="menu-toggle md:hidden focus:outline-none"><svg width="24" height="18" viewBox="0 0 24 18" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><rect width="24" height="2" rx="1" fill="currentColor"></rect><rect y="8" width="24" height="2" rx="1" fill="currentColor"></rect><rect y="16" width="24" height="2" rx="1" fill="currentColor"></rect></svg></button> `;
-  if (
-    store_get(($$store_subs ??= {}), "$authSignedInStore", authSignedInStore)
-  ) {
+  if (store_get($$store_subs ??= {}, "$authSignedInStore", authSignedInStore)) {
     $$payload.out += "<!--[-->";
-    $$payload.out += `<ul class="hidden md:flex h-16"><li class="mx-2 flex items-center h-16"><a href="/"${attr("class", `flex items-center h-full nav-underline hover:text-gray-400 $${stringify(currentClass("/"))}`)}><span class="flex items-center h-full px-4">Home</span></a></li> <li class="mx-2 flex items-center h-16"><a href="/pick-team"${attr("class", `flex items-center h-full nav-underline hover:text-gray-400 $${stringify(currentClass("/pick-team"))}`)}><span class="flex items-center h-full px-4">Squad Selection</span></a></li> <li class="flex flex-1 items-center"><div class="relative inline-block"><button${attr("class", `h-full flex items-center rounded-sm ${currentBorder("/profile")}`)}><img${attr("src", store_get(($$store_subs ??= {}), "$userGetProfilePicture", userGetProfilePicture))} alt="Profile" class="h-12 rounded-sm profile-pic" aria-label="Toggle Profile"></button> <div${attr("class", `absolute right-0 top-full w-48 bg-black rounded-b-md rounded-l-md shadow-lg z-50 profile-dropdown ${showProfileDropdown ? "block" : "hidden"}`)}><ul class="text-gray-700"><li><a href="/profile" class="flex items-center h-full w-full nav-underline hover:text-gray-400"><span class="flex items-center h-full w-full"><img${attr("src", store_get(($$store_subs ??= {}), "$userGetProfilePicture", userGetProfilePicture))} alt="logo" class="h-8 my-2 ml-4 mr-2"> <p class="w-full min-w-[125px] max-w-[125px] truncate">Profile</p></span></a></li> <li><button class="flex items-center justify-center px-4 pb-2 pt-1 text-white rounded-md shadow focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-50 nav-button">Disconnect `;
+    $$payload.out += `<ul class="hidden md:flex h-16"><li class="mx-2 flex items-center h-16"><a href="/"${attr("class", `flex items-center h-full nav-underline hover:text-gray-400 $${stringify(currentClass("/"))}`)}><span class="flex items-center h-full px-4">Home</span></a></li> <li class="mx-2 flex items-center h-16"><a href="/pick-team"${attr("class", `flex items-center h-full nav-underline hover:text-gray-400 $${stringify(currentClass("/pick-team"))}`)}><span class="flex items-center h-full px-4">Squad Selection</span></a></li> <li class="flex flex-1 items-center"><div class="relative inline-block"><button${attr("class", `h-full flex items-center rounded-sm ${currentBorder("/profile")}`)}><img${attr("src", store_get($$store_subs ??= {}, "$userGetProfilePicture", userGetProfilePicture))} alt="Profile" class="h-12 rounded-sm profile-pic" aria-label="Toggle Profile"></button> <div${attr("class", `absolute right-0 top-full w-48 bg-black rounded-b-md rounded-l-md shadow-lg z-50 profile-dropdown ${showProfileDropdown ? "block" : "hidden"}`)}><ul class="text-gray-700"><li><a href="/profile" class="flex items-center h-full w-full nav-underline hover:text-gray-400"><span class="flex items-center h-full w-full"><img${attr("src", store_get($$store_subs ??= {}, "$userGetProfilePicture", userGetProfilePicture))} alt="logo" class="h-8 my-2 ml-4 mr-2"> <p class="w-full min-w-[125px] max-w-[125px] truncate">Profile</p></span></a></li> <li><button class="flex items-center justify-center px-4 pb-2 pt-1 text-white rounded-md shadow focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-50 nav-button">Disconnect `;
     WalletIcon($$payload, { className: "ml-2 h-6 w-6 mt-1" });
-    $$payload.out += `<!----></button></li></ul></div></div></li></ul> <div${attr("class", `mobile-menu-panel absolute top-12 right-2.5 bg-black rounded-lg shadow-md z-10 p-2 ${"hidden"} md:hidden`)}><ul class="flex flex-col"><li class="p-2"><a href="/"${attr("class", `nav-underline hover:text-gray-400 ${currentClass("/")}`)}>Home</a></li> <li class="p-2"><a href="/pick-team"${attr("class", currentClass("/pick-team"))}>Squad Selection</a></li> <li class="p-2"><a href="/profile"${attr("class", `flex h-full w-full nav-underline hover:text-gray-400 w-full $${stringify(currentClass("/profile"))}`)}><span class="flex items-center h-full w-full"><img${attr("src", store_get(($$store_subs ??= {}), "$userGetProfilePicture", userGetProfilePicture))} alt="logo" class="w-8 h-8 rounded-sm"> <p class="w-full min-w-[100px] max-w-[100px] truncate p-2">Profile</p></span></a></li> <li class="px-2"><button class="flex h-full w-full hover:text-gray-400 w-full items-center">Disconnect `;
+    $$payload.out += `<!----></button></li></ul></div></div></li></ul> <div${attr("class", `mobile-menu-panel absolute top-12 right-2.5 bg-black rounded-lg shadow-md z-10 p-2 ${"hidden"} md:hidden`)}><ul class="flex flex-col"><li class="p-2"><a href="/"${attr("class", `nav-underline hover:text-gray-400 ${currentClass("/")}`)}>Home</a></li> <li class="p-2"><a href="/pick-team"${attr("class", currentClass("/pick-team"))}>Squad Selection</a></li> <li class="p-2"><a href="/profile"${attr("class", `flex h-full w-full nav-underline hover:text-gray-400 w-full $${stringify(currentClass("/profile"))}`)}><span class="flex items-center h-full w-full"><img${attr("src", store_get($$store_subs ??= {}, "$userGetProfilePicture", userGetProfilePicture))} alt="logo" class="w-8 h-8 rounded-sm"> <p class="w-full min-w-[100px] max-w-[100px] truncate p-2">Profile</p></span></a></li> <li class="px-2"><button class="flex h-full w-full hover:text-gray-400 w-full items-center">Disconnect `;
     WalletIcon($$payload, { className: "ml-2 h-6 w-6 mt-1" });
     $$payload.out += `<!----></button></li></ul></div>`;
   } else {
@@ -7749,7 +7143,7 @@ function Layout($$payload, $$props) {
       return;
     }
   };
-  store_get(($$store_subs ??= {}), "$authStore", authStore);
+  store_get($$store_subs ??= {}, "$authStore", authStore);
   $$payload.out += `<!---->`;
   await_block(
     init2(),
@@ -7766,7 +7160,7 @@ function Layout($$payload, $$props) {
       $$payload.out += `<!----></main> `;
       Footer($$payload);
       $$payload.out += `<!----></div>`;
-    },
+    }
   );
   $$payload.out += `<!---->`;
   if ($$store_subs) unsubscribe_stores($$store_subs);
@@ -7782,17 +7176,10 @@ function BadgeIcon($$payload, $$props) {
     className,
     primaryColour,
     secondaryColour,
-    thirdColour,
+    thirdColour
   });
 }
-var define_process_env_default$1 = {
-  OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai",
-  OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai",
-  DFX_NETWORK: "ic",
-  CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai",
-  CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai",
-  TOTAL_GAMEWEEKS: 22,
-};
+var define_process_env_default$1 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
 function createMonthlyLeaderboardStore() {
   const { subscribe, set: set2 } = writable(null);
   const itemsPerPage = 25;
@@ -7803,7 +7190,7 @@ function createMonthlyLeaderboardStore() {
   });
   let actor = ActorFactory.createActor(
     idlFactory,
-    define_process_env_default$1.OPENWSL_BACKEND_CANISTER_ID,
+    define_process_env_default$1.OPENWSL_BACKEND_CANISTER_ID
   );
   async function sync(seasonId, month, clubId) {
     let category2 = "monthly_leaderboards";
@@ -7814,8 +7201,7 @@ function createMonthlyLeaderboardStore() {
       return;
     }
     let dataCacheValues = newHashValues.ok;
-    let categoryHash =
-      dataCacheValues.find((x) => x.category === category2) ?? null;
+    let categoryHash = dataCacheValues.find((x) => x.category === category2) ?? null;
     const localHash = localStorage.getItem(`${category2}_hash`);
     if (categoryHash?.hash != localHash) {
       const limit = itemsPerPage;
@@ -7826,7 +7212,7 @@ function createMonthlyLeaderboardStore() {
         searchTerm: "",
         clubId,
         offset: BigInt(offset),
-        limit: BigInt(limit),
+        limit: BigInt(limit)
       };
       let result = await actor.getMonthlyLeaderboard(dto);
       if (isError(result)) {
@@ -7834,11 +7220,11 @@ function createMonthlyLeaderboardStore() {
           entries: [],
           month: 0,
           seasonId: 0,
-          totalEntries: 0n,
+          totalEntries: 0n
         };
         localStorage.setItem(
           category2,
-          JSON.stringify(emptyLeaderboard, replacer),
+          JSON.stringify(emptyLeaderboard, replacer)
         );
         localStorage.setItem(`${category2}_hash`, categoryHash?.hash ?? "");
         console.error("error fetching leaderboard store");
@@ -7847,19 +7233,13 @@ function createMonthlyLeaderboardStore() {
       let updatedLeaderboardData = result.ok;
       localStorage.setItem(
         category2,
-        JSON.stringify(updatedLeaderboardData.ok, replacer),
+        JSON.stringify(updatedLeaderboardData.ok, replacer)
       );
       localStorage.setItem(`${category2}_hash`, categoryHash?.hash ?? "");
       set2(updatedLeaderboardData.ok);
     }
   }
-  async function getMonthlyLeaderboard(
-    seasonId,
-    clubId,
-    month,
-    currentPage,
-    searchTerm,
-  ) {
+  async function getMonthlyLeaderboard(seasonId, clubId, month, currentPage, searchTerm) {
     const limit = itemsPerPage;
     const offset = (currentPage - 1) * limit;
     if (currentPage <= 4 && month == systemState?.calculationMonth) {
@@ -7872,8 +7252,8 @@ function createMonthlyLeaderboardStore() {
             ...cachedMonthlyLeaderboard,
             entries: cachedMonthlyLeaderboard.entries.slice(
               offset,
-              offset + limit,
-            ),
+              offset + limit
+            )
           };
         }
       }
@@ -7884,7 +7264,7 @@ function createMonthlyLeaderboardStore() {
       limit: BigInt(limit),
       searchTerm,
       month,
-      clubId,
+      clubId
     };
     let result = await actor.getMonthlyLeaderboards(dto);
     if (isError(result)) {
@@ -7893,18 +7273,18 @@ function createMonthlyLeaderboardStore() {
         clubId: 0,
         totalEntries: 0n,
         seasonId: 0,
-        entries: [],
+        entries: []
       };
       localStorage.setItem(
         category,
-        JSON.stringify(emptyLeaderboard, replacer),
+        JSON.stringify(emptyLeaderboard, replacer)
       );
       return {
         entries: [],
         clubId: 0,
         month: 0,
         seasonId: 0,
-        totalEntries: 0n,
+        totalEntries: 0n
       };
     }
     localStorage.setItem(category, JSON.stringify(result.ok, replacer));
@@ -7913,18 +7293,11 @@ function createMonthlyLeaderboardStore() {
   return {
     subscribe,
     sync,
-    getMonthlyLeaderboard,
+    getMonthlyLeaderboard
   };
 }
 createMonthlyLeaderboardStore();
-var define_process_env_default = {
-  OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai",
-  OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai",
-  DFX_NETWORK: "ic",
-  CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai",
-  CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai",
-  TOTAL_GAMEWEEKS: 22,
-};
+var define_process_env_default = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
 function createSeasonLeaderboardStore() {
   const { subscribe, set: set2 } = writable(null);
   const itemsPerPage = 25;
@@ -7935,7 +7308,7 @@ function createSeasonLeaderboardStore() {
   });
   let actor = ActorFactory.createActor(
     idlFactory,
-    define_process_env_default.OPENWSL_BACKEND_CANISTER_ID,
+    define_process_env_default.OPENWSL_BACKEND_CANISTER_ID
   );
   async function sync(seasonId) {
     let category2 = "season_leaderboard";
@@ -7946,8 +7319,7 @@ function createSeasonLeaderboardStore() {
       return;
     }
     let dataCacheValues = newHashValues.ok;
-    let categoryHash =
-      dataCacheValues.find((x) => x.category === category2) ?? null;
+    let categoryHash = dataCacheValues.find((x) => x.category === category2) ?? null;
     const localHash = localStorage.getItem(`${category2}_hash`);
     if (categoryHash?.hash != localHash) {
       const limit = itemsPerPage;
@@ -7956,7 +7328,7 @@ function createSeasonLeaderboardStore() {
         offset: BigInt(offset),
         seasonId,
         limit: BigInt(limit),
-        searchTerm: "",
+        searchTerm: ""
       };
       let result = await actor.getSeasonLeaderboard(dto);
       if (isError(result)) {
@@ -7965,7 +7337,7 @@ function createSeasonLeaderboardStore() {
       let updatedLeaderboardData = result.ok;
       localStorage.setItem(
         category2,
-        JSON.stringify(updatedLeaderboardData, replacer),
+        JSON.stringify(updatedLeaderboardData, replacer)
       );
       localStorage.setItem(`${category2}_hash`, categoryHash?.hash ?? "");
       set2(updatedLeaderboardData);
@@ -7974,18 +7346,17 @@ function createSeasonLeaderboardStore() {
       let cachedSeasonLeaderboard = {
         entries: [],
         seasonId: 0,
-        totalEntries: 0n,
+        totalEntries: 0n
       };
       try {
         cachedSeasonLeaderboard = JSON.parse(
-          cachedLeaderboardData ||
-            "{entries: [], gameweek: 0, seasonId: 0, totalEntries: 0n }",
+          cachedLeaderboardData || "{entries: [], gameweek: 0, seasonId: 0, totalEntries: 0n }"
         );
       } catch (e) {
         cachedSeasonLeaderboard = {
           entries: [],
           seasonId: 0,
-          totalEntries: 0n,
+          totalEntries: 0n
         };
       }
       set2(cachedSeasonLeaderboard);
@@ -7999,15 +7370,15 @@ function createSeasonLeaderboardStore() {
       if (cachedData && cachedData != "undefined") {
         let cachedSeasonLeaderboard;
         cachedSeasonLeaderboard = JSON.parse(
-          cachedData || "{entries: [], seasonId: 0, totalEntries: 0n }",
+          cachedData || "{entries: [], seasonId: 0, totalEntries: 0n }"
         );
         if (cachedSeasonLeaderboard) {
           return {
             ...cachedSeasonLeaderboard,
             entries: cachedSeasonLeaderboard.entries.slice(
               offset,
-              offset + limit,
-            ),
+              offset + limit
+            )
           };
         }
       }
@@ -8016,27 +7387,27 @@ function createSeasonLeaderboardStore() {
       offset: BigInt(offset),
       seasonId,
       limit: BigInt(limit),
-      searchTerm: "",
+      searchTerm: ""
     };
     let result = await actor.getSeasonLeaderboard(dto);
     if (isError(result)) {
       return {
         totalEntries: 0n,
         seasonId: 1,
-        entries: [],
+        entries: []
       };
     }
     let leaderboardData = result.ok;
     localStorage.setItem(
       category,
-      JSON.stringify(leaderboardData.ok, replacer),
+      JSON.stringify(leaderboardData.ok, replacer)
     );
     return leaderboardData;
   }
   return {
     subscribe,
     sync,
-    getSeasonLeaderboard,
+    getSeasonLeaderboard
   };
 }
 createSeasonLeaderboardStore();
@@ -8076,7 +7447,7 @@ function _page$8($$payload, $$props) {
       }
       $$payload2.out += `<!--]--></div>`;
     },
-    $$slots: { default: true },
+    $$slots: { default: true }
   });
   pop();
 }
@@ -8085,18 +7456,9 @@ function _page$7($$payload, $$props) {
   var $$store_subs;
   let fixturesWithTeams = [];
   let selectedGameweek;
-  Number(
-    store_get(($$store_subs ??= {}), "$page", page).url.searchParams.get("id"),
-  );
-  if (
-    fixturesWithTeams.length > 0 &&
-    store_get(($$store_subs ??= {}), "$clubStore", clubStore).length > 0
-  ) {
-    updateTableData(
-      fixturesWithTeams,
-      store_get(($$store_subs ??= {}), "$clubStore", clubStore),
-      selectedGameweek,
-    );
+  Number(store_get($$store_subs ??= {}, "$page", page).url.searchParams.get("id"));
+  if (fixturesWithTeams.length > 0 && store_get($$store_subs ??= {}, "$clubStore", clubStore).length > 0) {
+    updateTableData(fixturesWithTeams, store_get($$store_subs ??= {}, "$clubStore", clubStore), selectedGameweek);
   }
   Layout($$payload, {
     children: ($$payload2) => {
@@ -8106,7 +7468,7 @@ function _page$7($$payload, $$props) {
       }
       $$payload2.out += `<!--]-->`;
     },
-    $$slots: { default: true },
+    $$slots: { default: true }
   });
   if ($$store_subs) unsubscribe_stores($$store_subs);
   pop();
@@ -8116,30 +7478,22 @@ function _page$6($$payload, $$props) {
   var $$store_subs;
   Layout($$payload, {
     children: ($$payload2) => {
-      const each_array = ensure_array_like(
-        store_get(($$store_subs ??= {}), "$clubStore", clubStore).sort(
-          (a, b) => a.id - b.id,
-        ),
-      );
+      const each_array = ensure_array_like(store_get($$store_subs ??= {}, "$clubStore", clubStore).sort((a, b) => a.id - b.id));
       $$payload2.out += `<div class="page-header-wrapper flex w-full"><div class="content-panel w-full"><div class="w-full grid grid-cols-1 md:grid-cols-4 gap-4 mt-4"><p class="col-span-1 md:col-span-4 text-center w-full mb-4">Super League Clubs</p> <!--[-->`;
-      for (
-        let $$index = 0, $$length = each_array.length;
-        $$index < $$length;
-        $$index++
-      ) {
+      for (let $$index = 0, $$length = each_array.length; $$index < $$length; $$index++) {
         let team = each_array[$$index];
         $$payload2.out += `<div class="flex flex-col items-center bg-gray-700 rounded shadow p-4 w-full"><div class="flex items-center space-x-4 w-full">`;
         BadgeIcon($$payload2, {
           primaryColour: team.primaryColourHex,
           secondaryColour: team.secondaryColourHex,
           thirdColour: team.thirdColourHex,
-          className: "w-8",
+          className: "w-8"
         });
         $$payload2.out += `<!----> <p class="flex-grow text-lg md:text-sm">${escape_html(team.friendlyName)}</p> <a class="mt-auto self-end"${attr("href", `/club?id=${team.id}`)}><button class="fpl-button text-white font-bold py-2 px-4 rounded self-end">View</button></a></div></div>`;
       }
       $$payload2.out += `<!--]--></div></div></div>`;
     },
-    $$slots: { default: true },
+    $$slots: { default: true }
   });
   if ($$store_subs) unsubscribe_stores($$store_subs);
   pop();
@@ -8171,20 +7525,14 @@ function _page$5($$payload) {
             goals in a game. Applies to every player who scores a brace.</td></tr><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">Hat Trick Hero</td><td>Receive a X3 multiplier on a player's score if they score 3 or more
             goals in a game. Applies to every player who scores a hat-trick.</td></tr></tbody></table></div></div>`;
     },
-    $$slots: { default: true },
+    $$slots: { default: true }
   });
 }
 function _page$4($$payload, $$props) {
   push();
   var $$store_subs;
-  writable(
-    Number(
-      store_get(($$store_subs ??= {}), "$page", page).url.searchParams.get(
-        "gw",
-      ),
-    ) ?? 1,
-  );
-  store_get(($$store_subs ??= {}), "$page", page).url.searchParams.get("id");
+  writable(Number(store_get($$store_subs ??= {}, "$page", page).url.searchParams.get("gw")) ?? 1);
+  store_get($$store_subs ??= {}, "$page", page).url.searchParams.get("id");
   Layout($$payload, {
     children: ($$payload2) => {
       {
@@ -8193,7 +7541,7 @@ function _page$4($$payload, $$props) {
       }
       $$payload2.out += `<!--]-->`;
     },
-    $$slots: { default: true },
+    $$slots: { default: true }
   });
   if ($$store_subs) unsubscribe_stores($$store_subs);
   pop();
@@ -8208,30 +7556,18 @@ function _page$3($$payload, $$props) {
       }
       $$payload2.out += `<!--]-->`;
     },
-    $$slots: { default: true },
+    $$slots: { default: true }
   });
   pop();
 }
 function _page$2($$payload, $$props) {
   push();
   var $$store_subs;
-  let selectedGameweek =
-    store_get(($$store_subs ??= {}), "$systemStore", systemStore)
-      ?.pickTeamGameweek ?? 1;
+  let selectedGameweek = store_get($$store_subs ??= {}, "$systemStore", systemStore)?.pickTeamGameweek ?? 1;
   let fixturesWithTeams = [];
-  Number(
-    store_get(($$store_subs ??= {}), "$page", page).url.searchParams.get("id"),
-  );
-  if (
-    store_get(($$store_subs ??= {}), "$fixtureStore", fixtureStore).length >
-      0 &&
-    store_get(($$store_subs ??= {}), "$clubStore", clubStore).length > 0
-  ) {
-    updateTableData(
-      fixturesWithTeams,
-      store_get(($$store_subs ??= {}), "$clubStore", clubStore),
-      selectedGameweek,
-    );
+  Number(store_get($$store_subs ??= {}, "$page", page).url.searchParams.get("id"));
+  if (store_get($$store_subs ??= {}, "$fixtureStore", fixtureStore).length > 0 && store_get($$store_subs ??= {}, "$clubStore", clubStore).length > 0) {
+    updateTableData(fixturesWithTeams, store_get($$store_subs ??= {}, "$clubStore", clubStore), selectedGameweek);
   }
   Layout($$payload, {
     children: ($$payload2) => {
@@ -8241,7 +7577,7 @@ function _page$2($$payload, $$props) {
       }
       $$payload2.out += `<!--]-->`;
     },
-    $$slots: { default: true },
+    $$slots: { default: true }
   });
   if ($$store_subs) unsubscribe_stores($$store_subs);
   pop();
@@ -8256,7 +7592,7 @@ function _page$1($$payload, $$props) {
       }
       $$payload2.out += `<!--]-->`;
     },
-    $$slots: { default: true },
+    $$slots: { default: true }
   });
   pop();
 }
@@ -8275,7 +7611,7 @@ function _page($$payload) {
         on the rights of others.</p> <h2 class="default-sub-header">Changes to Terms</h2> <p class="my-4">These Terms and Conditions are subject to change. Amendments will be
         effective upon DAO members' approval via proposal and vote.</p></div></div>`;
     },
-    $$slots: { default: true },
+    $$slots: { default: true }
   });
 }
 export {
@@ -8300,5 +7636,5 @@ export {
   options as o,
   _page$1 as p,
   _page as q,
-  set_assets as s,
+  set_assets as s
 };

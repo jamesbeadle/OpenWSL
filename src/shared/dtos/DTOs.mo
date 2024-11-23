@@ -4,6 +4,17 @@ import FootballTypes "../types/football_types";
 
 module DTOs {
 
+  public type GetCanistersDTO = {
+    canisterType: T.CanisterType;
+  };
+
+  public type CanisterDTO = {
+    canisterId: Base.CanisterId;
+    cycles: Nat;
+    computeAllocation: Nat;
+    topups: [Base.CanisterTopup];
+  };
+
   public type ProfileDTO = {
     principalId : Text;
     username : Text;
@@ -48,6 +59,7 @@ module DTOs {
     principalId : Text;
     username : Text;
     profilePicture : ?Blob;
+    profilePictureType : Text;
     favouriteClubId : ?FootballTypes.ClubId;
     createDate : Int;
     gameweeks : [T.FantasyTeamSnapshot];
@@ -308,10 +320,6 @@ module DTOs {
     totalEntries : Nat;
   };
 
-  public type CanisterDTO = {
-    canister : T.LeaderboardCanister;
-  };
-
   public type ManagerCanisterDTO = {
     canisterId : Text;
     cycles : Nat;
@@ -450,14 +458,6 @@ module DTOs {
     canisterId: Base.CanisterId;
     lastTopup: Int;
     cyclesBalance: Nat64;
-  };
-
-  public type GetCanistersDTO = {
-    limit : Nat;
-    offset : Nat;
-    entries: [CanisterDTO];
-    totalEntries: Nat;
-    canisterTypeFilter: T.CanisterType;
   };
 
   public type GetTimersDTO = {

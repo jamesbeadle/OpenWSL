@@ -20,6 +20,7 @@ module GovernanceDTOs {
     seasonId: FootballTypes.SeasonId;
     leagueId: FootballTypes.LeagueId;
     fixtureId : FootballTypes.FixtureId;
+    gameweek: FootballTypes.GameweekNumber;
     playerEventData : [FootballTypes.PlayerEventData];
   };
 
@@ -61,6 +62,12 @@ module GovernanceDTOs {
     newLeagueId: FootballTypes.LeagueId;
     newClubId : FootballTypes.ClubId;
     newShirtNumber: Nat8;
+  };
+
+  public type SetFreeAgentDTO = {
+    leagueId: FootballTypes.LeagueId;
+    clubId: FootballTypes.ClubId;
+    playerId : FootballTypes.ClubId;
   };
 
   public type RecallPlayerDTO = {
@@ -162,5 +169,10 @@ module GovernanceDTOs {
     thirdColourHex : Text;
     abbreviatedName : Text;
     shirtType : FootballTypes.ShirtType;
+  };
+
+  public type RemoveClubDTO = {
+    leagueId: FootballTypes.LeagueId;
+    clubId: FootballTypes.ClubId;
   };
 };

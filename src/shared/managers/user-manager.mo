@@ -22,6 +22,7 @@ import Array "mo:base/Array";
 import Option "mo:base/Option";
 import Blob "mo:base/Blob";
 import Nat16 "mo:base/Nat16";
+import Bool "mo:base/Bool";
 import NetworkEnvironmentVariables "../network_environment_variables";
 
 module {
@@ -142,6 +143,7 @@ module {
                     weeklyPoints =  weeklyPoints;
                     monthlyPoints = monthlyPoints;
                     seasonPoints = seasonPoints;
+                    profilePictureType = foundManager.profilePictureType;
                   };
                   return #ok(managerDTO);
 
@@ -200,6 +202,7 @@ module {
                     weeklyPoints = weeklyPoints;
                     monthlyPoints = monthlyPoints;
                     seasonPoints = seasonPoints;
+                    profilePictureType = foundManager.profilePictureType;
                   };
                   return #ok(managerDTO);
                 };
@@ -239,9 +242,11 @@ module {
                 season.seasonId == pickTeamSeasonId;
               });
 
+              let hasPlayersInTeam = Array.size(foundManager.playerIds) > 0;
+          
               switch(currentManagerSeason){
                 case (?foundSeason){
-                  firstGameweek := List.size(foundSeason.gameweeks) == 0;
+                  firstGameweek := List.size(foundSeason.gameweeks) == 0 or not hasPlayersInTeam;
                 };
                 case (null){ }
               };
@@ -507,7 +512,7 @@ module {
         case (null){ };
         case (?foundDTO){
 
-        if (invalidBonuses(null, foundDTO, systemState, players)) {
+        if (await invalidBonuses(null, foundDTO, systemState, players)) {
           return #err(#InvalidBonuses);
         };
 
@@ -667,11 +672,10 @@ module {
       return canisterId;
     };
 
-    private func invalidBonuses(manager: ?T.Manager, updatedFantasyTeam : DTOs.UpdateTeamSelectionDTO, systemState: DTOs.SystemStateDTO, players : [DTOs.PlayerDTO]) : Bool {
+    private func invalidBonuses(manager: ?T.Manager, updatedFantasyTeam : DTOs.UpdateTeamSelectionDTO, systemState: DTOs.SystemStateDTO, players : [DTOs.PlayerDTO]) : async Bool {
       switch(manager){
         case (null){ };
         case (?foundManager){
-
           let goalGetterPlayed = updatedFantasyTeam.goalGetterGameweek == systemState.pickTeamGameweek;
           let passMasterPlayed = updatedFantasyTeam.passMasterGameweek == systemState.pickTeamGameweek;
           let noEntryPlayed = updatedFantasyTeam.noEntryGameweek == systemState.pickTeamGameweek;
@@ -682,7 +686,7 @@ module {
           let oneNationPlayed = updatedFantasyTeam.oneNationGameweek == systemState.pickTeamGameweek;
           let braceBonusPlayed = updatedFantasyTeam.braceBonusGameweek == systemState.pickTeamGameweek;
           let hatTrickHeroPlayed = updatedFantasyTeam.hatTrickHeroGameweek == systemState.pickTeamGameweek;
-
+         
           if(goalGetterPlayed and updatedFantasyTeam.goalGetterPlayerId == 0){
             return true;
           };
@@ -1070,7 +1074,7 @@ module {
 
       let manager = await manager_canister.getManager(managerPrincipalId);  
           
-      if (invalidBonuses(manager, dto, systemState, allPlayers)) {
+      if (await invalidBonuses(manager, dto, systemState, allPlayers)) {
         return #err(#InvalidBonuses);
       };
 
@@ -1096,8 +1100,10 @@ module {
             };
             case (null){ }
           };
+
+          let hasPlayersInTeam = Array.size(foundManager.playerIds) > 0;
           
-          if(not firstGameweek){
+          if(not firstGameweek and hasPlayersInTeam){
             let transfersAvailable = getTransfersAvailable(foundManager, dto.playerIds, allPlayers);
             if (transfersAvailable < 0) {
               return #err(#TooManyTransfers);
@@ -1329,6 +1335,10 @@ module {
 
         await manager_canister.removePlayerFromTeams(leagueId, playerId, parentCanisterId);
       };
+    };
+ 
+    public func getManagerCanisterIds() : [(Base.PrincipalId, Base.CanisterId)] {
+      return Iter.toArray(managerCanisterIds.entries());
     };
 
     //stable getters and setters
