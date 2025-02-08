@@ -577,8 +577,14 @@ export interface _SERVICE {
   getWeeklyLeaderboards: ActorMethod<[], Array<WeeklyLeaderboard>>;
   getWeeklyRewards: ActorMethod<[SeasonId, GameweekNumber], Result_2>;
   isUsernameValid: ActorMethod<[UsernameFilterDTO], boolean>;
-  notifyAppsOfLoan: ActorMethod<[LeagueId, PlayerId], Result>;
-  notifyAppsOfPositionChange: ActorMethod<[LeagueId, PlayerId], Result>;
+  notifyAppsOfFixtureFinalised: ActorMethod<[SeasonId, GameweekNumber], Result>;
+  notifyAppsOfGameweekStarting: ActorMethod<[SeasonId, GameweekNumber], Result>;
+  notifyAppsOfLoan: ActorMethod<[PlayerId], Result>;
+  notifyAppsOfLoanExpired: ActorMethod<[PlayerId], Result>;
+  notifyAppsOfPositionChange: ActorMethod<[PlayerId], Result>;
+  notifyAppsOfRetirement: ActorMethod<[PlayerId], Result>;
+  notifyAppsOfSeasonComplete: ActorMethod<[SeasonId], Result>;
+  notifyAppsOfTransfer: ActorMethod<[PlayerId], Result>;
   payWeeklyRewards: ActorMethod<[GameweekNumber], Result>;
   saveFantasyTeam: ActorMethod<[UpdateTeamSelectionDTO], Result>;
   searchUsername: ActorMethod<[UsernameFilterDTO], Result_1>;

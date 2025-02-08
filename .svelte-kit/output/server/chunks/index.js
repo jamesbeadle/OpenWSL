@@ -4711,7 +4711,7 @@ const options = {
 		<div class="error">
 			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "q3c7ng"
+  version_hash: "lgolvf"
 };
 async function get_hooks() {
   return {};
@@ -5547,8 +5547,22 @@ const idlFactory = ({ IDL }) => {
       ["query"]
     ),
     isUsernameValid: IDL.Func([UsernameFilterDTO], [IDL.Bool], ["query"]),
-    notifyAppsOfLoan: IDL.Func([LeagueId, PlayerId], [Result], []),
-    notifyAppsOfPositionChange: IDL.Func([LeagueId, PlayerId], [Result], []),
+    notifyAppsOfFixtureFinalised: IDL.Func(
+      [SeasonId, GameweekNumber],
+      [Result],
+      []
+    ),
+    notifyAppsOfGameweekStarting: IDL.Func(
+      [SeasonId, GameweekNumber],
+      [Result],
+      []
+    ),
+    notifyAppsOfLoan: IDL.Func([PlayerId], [Result], []),
+    notifyAppsOfLoanExpired: IDL.Func([PlayerId], [Result], []),
+    notifyAppsOfPositionChange: IDL.Func([PlayerId], [Result], []),
+    notifyAppsOfRetirement: IDL.Func([PlayerId], [Result], []),
+    notifyAppsOfSeasonComplete: IDL.Func([SeasonId], [Result], []),
+    notifyAppsOfTransfer: IDL.Func([PlayerId], [Result], []),
     payWeeklyRewards: IDL.Func([GameweekNumber], [Result], []),
     saveFantasyTeam: IDL.Func([UpdateTeamSelectionDTO], [Result], []),
     searchUsername: IDL.Func([UsernameFilterDTO], [Result_1], []),
