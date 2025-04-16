@@ -3,9 +3,9 @@ import * as devalue from "devalue";
 import { Buffer } from "buffer";
 import { parse, serialize } from "cookie";
 import * as set_cookie_parser from "set-cookie-parser";
+import { HttpAgent, Actor } from "@dfinity/agent";
 import { AuthClient } from "@dfinity/auth-client";
 import { createAgent } from "@dfinity/utils";
-import { HttpAgent, Actor } from "@dfinity/agent";
 import { Text as Text$1 } from "@dfinity/candid/lib/cjs/idl.js";
 import { IcrcLedgerCanister } from "@dfinity/ledger-icrc";
 import { Principal } from "@dfinity/principal";
@@ -912,22 +912,10 @@ var define_property = Object.defineProperty;
 var get_descriptor = Object.getOwnPropertyDescriptor;
 const noop = () => {
 };
-function is_promise(value) {
-  return typeof value?.then === "function";
-}
 function run_all(arr) {
   for (var i = 0; i < arr.length; i++) {
     arr[i]();
   }
-}
-function fallback(value, fallback2, lazy = false) {
-  return value === void 0 ? lazy ? (
-    /** @type {() => V} */
-    fallback2()
-  ) : (
-    /** @type {V} */
-    fallback2
-  ) : value;
 }
 function equals(value) {
   return value === this.v;
@@ -2267,12 +2255,12 @@ function escape_html_attr(str) {
   });
   return `"${escaped_str}"`;
 }
-const replacements$1 = {
+const replacements = {
   "<": "\\u003C",
   "\u2028": "\\u2028",
   "\u2029": "\\u2029"
 };
-const pattern = new RegExp(`[${Object.keys(replacements$1).join("")}]`, "g");
+const pattern = new RegExp(`[${Object.keys(replacements).join("")}]`, "g");
 function serialize_data(fetched, filter, prerendering2 = false) {
   const headers2 = {};
   let cache_control = null;
@@ -2292,7 +2280,7 @@ function serialize_data(fetched, filter, prerendering2 = false) {
     headers: headers2,
     body: fetched.response_body
   };
-  const safe_payload = JSON.stringify(payload).replace(pattern, (match) => replacements$1[match]);
+  const safe_payload = JSON.stringify(payload).replace(pattern, (match) => replacements[match]);
   const attrs = [
     'type="application/json"',
     "data-sveltekit-fetched",
@@ -4394,11 +4382,10 @@ async function respond(request, options2, manifest, state) {
     }
   }
 }
-const ATTR_REGEX = /[&"<]/g;
 const CONTENT_REGEX = /[&<]/g;
 function escape_html(value, is_attr) {
   const str = String(value ?? "");
-  const pattern2 = is_attr ? ATTR_REGEX : CONTENT_REGEX;
+  const pattern2 = CONTENT_REGEX;
   pattern2.lastIndex = 0;
   let escaped = "";
   let last = 0;
@@ -4483,21 +4470,6 @@ function render(component, options2 = {}) {
     body: payload.out
   };
 }
-const replacements = {
-  translate: /* @__PURE__ */ new Map([
-    [true, "yes"],
-    [false, "no"]
-  ])
-};
-function attr(name, value, is_boolean = false) {
-  if (value == null || !value && is_boolean || value === "" && name === "class") return "";
-  const normalized = name in replacements && replacements[name].get(value) || value;
-  const assignment = is_boolean ? "" : `="${escape_html(normalized, true)}"`;
-  return ` ${name}${assignment}`;
-}
-function stringify(value) {
-  return typeof value === "string" ? value : value == null ? "" : value + "";
-}
 function store_get(store_values, store_name, store) {
   if (store_name in store_values && store_values[store_name][0] === store) {
     return store_values[store_name][2];
@@ -4517,40 +4489,6 @@ function unsubscribe_stores(store_values) {
     store_values[store_name][1]();
   }
 }
-function slot(payload, $$props, name, slot_props, fallback_fn) {
-  var slot_fn = $$props.$$slots?.[name];
-  if (slot_fn === true) {
-    slot_fn = $$props["children"];
-  }
-  if (slot_fn !== void 0) {
-    slot_fn(payload, slot_props);
-  }
-}
-function bind_props(props_parent, props_now) {
-  for (const key2 in props_now) {
-    const initial_value = props_parent[key2];
-    const value = props_now[key2];
-    if (initial_value === void 0 && value !== void 0 && Object.getOwnPropertyDescriptor(props_parent, key2)?.set) {
-      props_parent[key2] = value;
-    }
-  }
-}
-function await_block(promise, pending_fn, then_fn) {
-  if (is_promise(promise)) {
-    promise.then(null, noop);
-    if (pending_fn !== null) {
-      pending_fn();
-    }
-  } else if (then_fn !== null) {
-    then_fn(promise);
-  }
-}
-function ensure_array_like(array_like_or_iterator) {
-  if (array_like_or_iterator) {
-    return array_like_or_iterator.length !== void 0 ? array_like_or_iterator : Array.from(array_like_or_iterator);
-  }
-  return [];
-}
 function asClassComponent(component) {
   const component_constructor = asClassComponent$1(component);
   const _render = (props, { context } = {}) => {
@@ -4563,13 +4501,6 @@ function asClassComponent(component) {
   };
   component_constructor.render = _render;
   return component_constructor;
-}
-function onDestroy(fn) {
-  var context = (
-    /** @type {Component} */
-    current_component
-  );
-  (context.d ??= []).push(fn);
 }
 let prerendering = false;
 function set_building() {
@@ -4711,7 +4642,7 @@ const options = {
 		<div class="error">
 			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "lgolvf"
+  version_hash: "5xcpi1"
 };
 async function get_hooks() {
   return {};
@@ -6338,264 +6269,9 @@ function createManagerStore() {
   };
 }
 createManagerStore();
-function OpenFPLIcon($$payload, $$props) {
-  let className = fallback($$props["className"], "");
-  $$payload.out += `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"${attr("class", className)} fill="currentColor" viewBox="0 0 219 297"><path d="M111.841 0.35467C110.455 0.112752 109.035 0.112564 107.648 0.351435C69.2925 6.95892 34.5675 22.8118 4.9608 45.2186C1.80522 47.6068 0.0151367 51.3653 0.0151367 55.3227V201.488C0.0151367 205.3 1.68822 208.92 4.59169 211.389L101.167 293.546C106.043 297.694 113.215 297.674 118.068 293.499L213.516 211.386C216.386 208.916 218.037 205.319 218.038 201.532L218.059 55.3581C218.06 51.3421 216.216 47.5364 212.989 45.1469C183.821 23.553 149.285 6.88999 111.841 0.35467ZM131.413 232.023C131.413 232.804 130.921 233.586 130.121 233.782L109.637 240.526C109.238 240.624 108.838 240.624 108.438 240.526L87.9544 233.782C87.1548 233.489 86.655 232.804 86.655 232.023V225.18C86.655 224.496 87.0548 223.812 87.6545 223.519L108.138 212.962C108.738 212.669 109.338 212.669 109.937 212.962L130.421 223.519C131.021 223.812 131.413 224.496 131.413 225.18V232.023ZM169.935 156.662C169.935 157.346 169.535 158.03 168.835 158.323L154.249 165.654C153.25 166.143 152.95 167.316 153.449 168.195L167.636 193.902C168.036 194.684 167.936 195.564 167.336 196.15L143.154 219.414C142.454 220.098 141.455 220.098 140.655 219.609L113.082 200.158C112.183 199.474 111.983 198.203 112.782 197.323L134.665 173.474C135.965 172.007 134.465 169.857 132.666 170.444L109.584 177.774C109.184 177.872 108.784 177.872 108.384 177.774L85.4093 170.444C83.5102 169.857 82.1108 172.105 83.4102 173.474L105.285 197.323C106.085 198.203 105.885 199.474 104.986 200.158L77.4128 219.609C76.6131 220.098 75.6135 220.098 74.9138 219.414L50.7396 196.053C50.1398 195.466 50.0399 194.586 50.4397 193.805L64.6259 168.098C65.1257 167.12 64.7259 166.045 63.8263 165.556L49.2402 158.226C48.6405 157.932 48.1407 157.248 48.1407 156.564V105.346C48.1407 103.88 49.84 102.902 51.1394 103.782L63.1266 111.699C63.6264 112.09 63.9262 112.579 63.9262 113.263L64.0262 126.459C64.0262 127.045 64.3261 127.632 64.8259 128.023L82.4106 140.045C83.7101 140.925 85.5093 139.947 85.4093 138.383L84.3098 115.12C84.3098 114.534 84.0099 113.947 83.5102 113.654L48.9403 90.4887C48.4406 90.0977 48.1407 89.5113 48.1407 88.9248V77.4887C48.1407 77.0977 48.2406 76.609 48.5405 76.3158L61.0275 60.8722C61.5273 60.188 62.4269 59.9925 63.2265 60.2857L108.284 76.609C108.684 76.8045 109.184 76.8045 109.584 76.609L154.649 60.2857C155.449 59.9925 156.341 60.2857 156.84 60.8722L169.335 76.3158C169.635 76.609 169.735 77.0977 169.735 77.4887V88.9248C169.735 89.5113 169.435 90.0977 168.935 90.4887L135.78 112.706C134.843 113.334 133.766 114.09 133.766 115.218L132.666 138.481C132.566 140.045 134.365 141.023 135.665 140.143L153.25 128.12C153.749 127.729 154.049 127.241 154.049 126.556L154.149 113.361C154.149 112.774 154.449 112.188 154.949 111.797L166.936 103.88C168.235 103 169.935 103.88 169.935 105.444V156.662Z" fill="#FFFFFF"></path></svg>`;
-  bind_props($$props, { className });
+function Layout($$payload) {
+  $$payload.out += `<div class="flex flex-col h-screen justify-between default-text"><main class="page-wrapper"><h1>OpenWSL</h1> <p class="mt-4">OpenWSL is coming soon.</p></main></div>`;
 }
-function WalletIcon($$payload, $$props) {
-  let className = fallback($$props["className"], "");
-  $$payload.out += `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true"${attr("class", className)} fill="currentColor" viewBox="0 0 24 24"><path d="M12.136.326A1.5 1.5 0 0 1 14 1.78V3h.5A1.5 1.5 0 0 1 16 4.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 13.5v-9a1.5 1.5 0 0 1 1.432-1.499L12.136.326zM5.562 3H13V1.78a.5.5 0 0 0-.621-.484L5.562 3zM1.5 4a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5h-13z"></path><path d="M15.5,6.5v3a1,1,0,0,1-1,1h-3.5v-5H14.5A1,1,0,0,1,15.5,6.5Z"></path><path d="M12,8a.5,.5 0,1,1,.001,0Z"></path></svg>`;
-  bind_props($$props, { className });
-}
-const authSignedInStore = derived(
-  authStore,
-  ({ identity }) => identity !== null && identity !== void 0
-);
-var define_process_env_default$a = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
-function createUserStore() {
-  const { subscribe, set: set2 } = writable(null);
-  async function sync() {
-    let localStorageString = localStorage.getItem("user_profile_data");
-    if (localStorageString) {
-      const localProfile = JSON.parse(localStorageString);
-      set2(localProfile);
-      return;
-    }
-    try {
-      await cacheProfile();
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-      throw error;
-    }
-  }
-  async function updateUsername(username) {
-    try {
-      const identityActor = await ActorFactory.createIdentityActor(
-        authStore,
-        define_process_env_default$a.OPENWSL_BACKEND_CANISTER_ID ?? ""
-      );
-      let dto = {
-        username
-      };
-      const result = await identityActor.updateUsername(dto);
-      if (isError(result)) {
-        console.error("Error updating username");
-        return;
-      }
-      await cacheProfile();
-      return result;
-    } catch (error) {
-      console.error("Error updating username:", error);
-      throw error;
-    }
-  }
-  async function updateFavouriteTeam(favouriteTeamId) {
-    try {
-      const identityActor = await ActorFactory.createIdentityActor(
-        authStore,
-        define_process_env_default$a.OPENWSL_BACKEND_CANISTER_ID ?? ""
-      );
-      let dto = {
-        favouriteClubId: favouriteTeamId
-      };
-      const result = await identityActor.updateFavouriteClub(dto);
-      if (isError(result)) {
-        console.error("Error updating favourite team");
-        return;
-      }
-      await cacheProfile();
-      return result;
-    } catch (error) {
-      console.error("Error updating favourite team:", error);
-      throw error;
-    }
-  }
-  async function updateProfilePicture(picture) {
-    try {
-      const maxPictureSize = 1e3;
-      const extension = getFileExtensionFromFile(picture);
-      if (picture.size > maxPictureSize * 1024) {
-        return null;
-      }
-      const reader = new FileReader();
-      reader.readAsArrayBuffer(picture);
-      reader.onloadend = async () => {
-        const arrayBuffer = reader.result;
-        const uint8Array = new Uint8Array(arrayBuffer);
-        try {
-          const identityActor = await ActorFactory.createIdentityActor(
-            authStore,
-            define_process_env_default$a.OPENWSL_BACKEND_CANISTER_ID ?? ""
-          );
-          let dto = {
-            profilePicture: uint8Array,
-            extension
-          };
-          const result = await identityActor.updateProfilePicture(dto);
-          if (isError(result)) {
-            console.error("Error updating profile picture");
-            return;
-          }
-          await cacheProfile();
-          return result;
-        } catch (error) {
-          console.error(error);
-        }
-      };
-    } catch (error) {
-      console.error("Error updating username:", error);
-      throw error;
-    }
-  }
-  function getFileExtensionFromFile(file) {
-    const filename = file.name;
-    const lastIndex = filename.lastIndexOf(".");
-    return lastIndex !== -1 ? filename.substring(lastIndex + 1) : "";
-  }
-  async function isUsernameAvailable(username) {
-    const identityActor = await ActorFactory.createIdentityActor(
-      authStore,
-      define_process_env_default$a.OPENWSL_BACKEND_CANISTER_ID
-    );
-    let dto = {
-      username
-    };
-    return await identityActor.isUsernameValid(dto);
-  }
-  async function cacheProfile() {
-    const identityActor = await ActorFactory.createIdentityActor(
-      authStore,
-      define_process_env_default$a.OPENWSL_BACKEND_CANISTER_ID
-    );
-    let getProfileResponse = await identityActor.getProfile();
-    let error = isError(getProfileResponse);
-    if (error) {
-      console.error("Error fetching user profile");
-      return;
-    }
-    let profileData = getProfileResponse.ok;
-    set2(profileData);
-  }
-  async function withdrawFPL(withdrawalAddress, withdrawalAmount) {
-    try {
-      let identity;
-      authStore.subscribe(async (auth) => {
-        identity = auth.identity;
-      });
-      if (!identity) {
-        return;
-      }
-      let principalId = identity.getPrincipal();
-      const agent = await createAgent({
-        identity,
-        host: void 0,
-        fetchRootKey: define_process_env_default$a.DFX_NETWORK === "local"
-      });
-      const { transfer } = IcrcLedgerCanister.create({
-        agent,
-        canisterId: define_process_env_default$a.DFX_NETWORK === "ic" ? Principal.fromText("ddsp7-7iaaa-aaaaq-aacqq-cai") : Principal.fromText("avqkn-guaaa-aaaaa-qaaea-cai")
-      });
-      if (principalId) {
-        try {
-          let transfer_result = await transfer({
-            to: {
-              owner: Principal.fromText(withdrawalAddress),
-              subaccount: []
-            },
-            fee: 100000n,
-            memo: new Uint8Array(Text$1.encodeValue("0")),
-            from_subaccount: void 0,
-            created_at_time: BigInt(Date.now()) * BigInt(1e6),
-            amount: withdrawalAmount - 100000n
-          });
-        } catch (err) {
-          console.error(err.errorType);
-        }
-      }
-    } catch (error) {
-      console.error("Error withdrawing FPL.", error);
-      throw error;
-    }
-  }
-  async function getFPLBalance() {
-    let identity;
-    authStore.subscribe(async (auth) => {
-      identity = auth.identity;
-    });
-    if (!identity) {
-      return 0n;
-    }
-    let principalId = identity.getPrincipal();
-    const agent = await createAgent({
-      identity,
-      host: void 0,
-      fetchRootKey: define_process_env_default$a.DFX_NETWORK === "local"
-    });
-    const { balance } = IcrcLedgerCanister.create({
-      agent,
-      canisterId: Principal.fromText("ddsp7-7iaaa-aaaaq-aacqq-cai")
-    });
-    if (principalId) {
-      try {
-        let result = await balance({
-          owner: principalId,
-          certified: false
-        });
-        return result;
-      } catch (err) {
-        console.error(err);
-      }
-    }
-    return 0n;
-  }
-  return {
-    subscribe,
-    sync,
-    updateUsername,
-    updateFavouriteTeam,
-    updateProfilePicture,
-    isUsernameAvailable,
-    cacheProfile,
-    withdrawFPL,
-    getFPLBalance
-  };
-}
-const userStore = createUserStore();
-const userGetProfilePicture = derived(
-  userStore,
-  ($user) => {
-    try {
-      let byteArray;
-      if ($user && $user.profilePicture) {
-        if (Array.isArray($user.profilePicture) && $user.profilePicture[0] instanceof Uint8Array) {
-          byteArray = $user.profilePicture[0];
-          return `data:image/${$user.profilePictureType};base64,${uint8ArrayToBase64(byteArray)}`;
-        } else if ($user.profilePicture instanceof Uint8Array) {
-          return `data:${$user.profilePictureType};base64,${uint8ArrayToBase64(
-            $user.profilePicture
-          )}`;
-        } else {
-          if (typeof $user.profilePicture === "string") {
-            if ($user.profilePicture.startsWith("data:image")) {
-              return $user.profilePicture;
-            } else {
-              return `data:${$user.profilePictureType};base64,${$user.profilePicture}`;
-            }
-          }
-        }
-      }
-      return "/profile_placeholder.png";
-    } catch (error) {
-      console.error(error);
-      return "/profile_placeholder.png";
-    }
-  }
-);
-derived(
-  userStore,
-  (user) => user !== null && user !== void 0 ? user.favouriteTeamId : 0
-);
 function createCountryStore() {
   const { subscribe, set: set2 } = writable([]);
   return {
@@ -6627,13 +6303,13 @@ function createSeasonStore() {
   };
 }
 const seasonStore = createSeasonStore();
-var define_process_env_default$9 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
+var define_process_env_default$a = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
 class PlayerService {
   actor;
   constructor() {
     this.actor = ActorFactory.createActor(
       idlFactory,
-      define_process_env_default$9.OPENWSL_BACKEND_CANISTER_ID
+      define_process_env_default$a.OPENWSL_BACKEND_CANISTER_ID
     );
   }
   async getPlayers() {
@@ -6670,13 +6346,13 @@ function createPlayerStore() {
   };
 }
 const playerStore = createPlayerStore();
-var define_process_env_default$8 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
+var define_process_env_default$9 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
 class PlayerEventsService {
   actor;
   constructor() {
     this.actor = ActorFactory.createActor(
       idlFactory,
-      define_process_env_default$8.OPENWSL_BACKEND_CANISTER_ID
+      define_process_env_default$9.OPENWSL_BACKEND_CANISTER_ID
     );
   }
   async getPlayerDetailsForGameweek() {
@@ -6819,13 +6495,13 @@ function createPlayerEventsStore() {
   };
 }
 const playerEventsStore = createPlayerEventsStore();
-var define_process_env_default$7 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
+var define_process_env_default$8 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
 class WeeklyLeaderboardService {
   actor;
   constructor() {
     this.actor = ActorFactory.createActor(
       idlFactory,
-      define_process_env_default$7.OPENWSL_BACKEND_CANISTER_ID
+      define_process_env_default$8.OPENWSL_BACKEND_CANISTER_ID
     );
   }
   async getWeeklyLeaderboard(offset, seasonId, limit, gameweek) {
@@ -6858,13 +6534,13 @@ function createWeeklyLeaderboardStore() {
   };
 }
 const weeklyLeaderboardStore = createWeeklyLeaderboardStore();
-var define_process_env_default$6 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
+var define_process_env_default$7 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
 class DataHashService {
   actor;
   constructor() {
     this.actor = ActorFactory.createActor(
       idlFactory,
-      define_process_env_default$6.OPENWSL_BACKEND_CANISTER_ID
+      define_process_env_default$7.OPENWSL_BACKEND_CANISTER_ID
     );
   }
   async getDataHashes() {
@@ -6873,13 +6549,13 @@ class DataHashService {
     return result.ok;
   }
 }
-var define_process_env_default$5 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
+var define_process_env_default$6 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
 class CountryService {
   actor;
   constructor() {
     this.actor = ActorFactory.createActor(
       idlFactory,
-      define_process_env_default$5.OPENWSL_BACKEND_CANISTER_ID
+      define_process_env_default$6.OPENWSL_BACKEND_CANISTER_ID
     );
   }
   async getCountries() {
@@ -6888,13 +6564,13 @@ class CountryService {
     return result.ok;
   }
 }
-var define_process_env_default$4 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
+var define_process_env_default$5 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
 class SystemService {
   actor;
   constructor() {
     this.actor = ActorFactory.createActor(
       idlFactory,
-      define_process_env_default$4.OPENWSL_BACKEND_CANISTER_ID
+      define_process_env_default$5.OPENWSL_BACKEND_CANISTER_ID
     );
   }
   async getSystemState() {
@@ -6903,13 +6579,13 @@ class SystemService {
     return result.ok;
   }
 }
-var define_process_env_default$3 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
+var define_process_env_default$4 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
 class SeasonService {
   actor;
   constructor() {
     this.actor = ActorFactory.createActor(
       idlFactory,
-      define_process_env_default$3.OPENWSL_BACKEND_CANISTER_ID
+      define_process_env_default$4.OPENWSL_BACKEND_CANISTER_ID
     );
   }
   async getSeasons() {
@@ -6918,13 +6594,13 @@ class SeasonService {
     return result.ok;
   }
 }
-var define_process_env_default$2 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
+var define_process_env_default$3 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
 class ClubService {
   actor;
   constructor() {
     this.actor = ActorFactory.createActor(
       idlFactory,
-      define_process_env_default$2.OPENWSL_BACKEND_CANISTER_ID
+      define_process_env_default$3.OPENWSL_BACKEND_CANISTER_ID
     );
   }
   async getClubs() {
@@ -7091,108 +6767,254 @@ class StoreManager {
   }
 }
 new StoreManager();
-function Header($$payload, $$props) {
-  push();
-  var $$store_subs;
-  let currentClass, currentBorder;
-  let showProfileDropdown = false;
-  onDestroy(() => {
-    if (typeof window !== "undefined") {
-      document.removeEventListener("click", closeDropdownOnClickOutside);
-    }
-  });
-  function closeDropdownOnClickOutside(event) {
-    const target = event.target;
-    if (target instanceof Element) {
-      if (!target.closest(".profile-dropdown") && !target.closest(".profile-pic")) {
-        showProfileDropdown = false;
-      }
-    }
-  }
-  currentClass = (route) => store_get($$store_subs ??= {}, "$page", page).url.pathname === route ? "text-blue-500 nav-underline active" : "nav-underline";
-  currentBorder = (route) => store_get($$store_subs ??= {}, "$page", page).url.pathname === route ? "active-border" : "";
-  $$payload.out += `<header><nav class="text-white"><div class="px-4 h-16 flex justify-between items-center w-full"><a href="/" class="hover:text-gray-400 flex items-center">`;
-  OpenFPLIcon($$payload, { className: "h-8 w-auto" });
-  $$payload.out += `<!----><b class="ml-2">OpenWSL</b></a> <button class="menu-toggle md:hidden focus:outline-none"><svg width="24" height="18" viewBox="0 0 24 18" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><rect width="24" height="2" rx="1" fill="currentColor"></rect><rect y="8" width="24" height="2" rx="1" fill="currentColor"></rect><rect y="16" width="24" height="2" rx="1" fill="currentColor"></rect></svg></button> `;
-  if (store_get($$store_subs ??= {}, "$authSignedInStore", authSignedInStore)) {
-    $$payload.out += "<!--[-->";
-    $$payload.out += `<ul class="hidden md:flex h-16"><li class="mx-2 flex items-center h-16"><a href="/"${attr("class", `flex items-center h-full nav-underline hover:text-gray-400 $${stringify(currentClass("/"))}`)}><span class="flex items-center h-full px-4">Home</span></a></li> <li class="mx-2 flex items-center h-16"><a href="/pick-team"${attr("class", `flex items-center h-full nav-underline hover:text-gray-400 $${stringify(currentClass("/pick-team"))}`)}><span class="flex items-center h-full px-4">Squad Selection</span></a></li> <li class="flex flex-1 items-center"><div class="relative inline-block"><button${attr("class", `h-full flex items-center rounded-sm ${currentBorder("/profile")}`)}><img${attr("src", store_get($$store_subs ??= {}, "$userGetProfilePicture", userGetProfilePicture))} alt="Profile" class="h-12 rounded-sm profile-pic" aria-label="Toggle Profile"></button> <div${attr("class", `absolute right-0 top-full w-48 bg-black rounded-b-md rounded-l-md shadow-lg z-50 profile-dropdown ${showProfileDropdown ? "block" : "hidden"}`)}><ul class="text-gray-700"><li><a href="/profile" class="flex items-center h-full w-full nav-underline hover:text-gray-400"><span class="flex items-center h-full w-full"><img${attr("src", store_get($$store_subs ??= {}, "$userGetProfilePicture", userGetProfilePicture))} alt="logo" class="h-8 my-2 ml-4 mr-2"> <p class="w-full min-w-[125px] max-w-[125px] truncate">Profile</p></span></a></li> <li><button class="flex items-center justify-center px-4 pb-2 pt-1 text-white rounded-md shadow focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-50 nav-button">Disconnect `;
-    WalletIcon($$payload, { className: "ml-2 h-6 w-6 mt-1" });
-    $$payload.out += `<!----></button></li></ul></div></div></li></ul> <div${attr("class", `mobile-menu-panel absolute top-12 right-2.5 bg-black rounded-lg shadow-md z-10 p-2 ${"hidden"} md:hidden`)}><ul class="flex flex-col"><li class="p-2"><a href="/"${attr("class", `nav-underline hover:text-gray-400 ${currentClass("/")}`)}>Home</a></li> <li class="p-2"><a href="/pick-team"${attr("class", currentClass("/pick-team"))}>Squad Selection</a></li> <li class="p-2"><a href="/profile"${attr("class", `flex h-full w-full nav-underline hover:text-gray-400 w-full $${stringify(currentClass("/profile"))}`)}><span class="flex items-center h-full w-full"><img${attr("src", store_get($$store_subs ??= {}, "$userGetProfilePicture", userGetProfilePicture))} alt="logo" class="w-8 h-8 rounded-sm"> <p class="w-full min-w-[100px] max-w-[100px] truncate p-2">Profile</p></span></a></li> <li class="px-2"><button class="flex h-full w-full hover:text-gray-400 w-full items-center">Disconnect `;
-    WalletIcon($$payload, { className: "ml-2 h-6 w-6 mt-1" });
-    $$payload.out += `<!----></button></li></ul></div>`;
-  } else {
-    $$payload.out += "<!--[!-->";
-    $$payload.out += `<ul class="hidden md:flex"><li class="mx-2 flex items-center h-16"><button class="flex items-center justify-center px-4 py-2 bg-blue-500 text-white rounded-md shadow hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-50 nav-button">Connect `;
-    WalletIcon($$payload, { className: "ml-2 h-6 w-6 mt-1" });
-    $$payload.out += `<!----></button></li></ul> <div${attr("class", `mobile-menu-panel absolute top-12 right-2.5 bg-black rounded-lg shadow-md z-10 p-2 ${"hidden"} md:hidden`)}><ul class="flex flex-col"><li class="p-2"><button class="flex items-center justify-center px-4 py-2 bg-blue-500 text-white rounded-md shadow hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-50 nav-button">Connect `;
-    WalletIcon($$payload, { className: "ml-2 h-6 w-6 mt-1" });
-    $$payload.out += `<!----></button></li></ul></div>`;
-  }
-  $$payload.out += `<!--]--></div></nav></header>`;
-  if ($$store_subs) unsubscribe_stores($$store_subs);
-  pop();
-}
-function JunoIcon($$payload, $$props) {
-  let className = fallback($$props["className"], "");
-  $$payload.out += `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"${attr("class", className)} fill="currentColor" viewBox="0 0 130 130"><g id="Layer_1-2"><g><path d="M91.99,64.798c0,-20.748 -16.845,-37.593 -37.593,-37.593l-0.003,-0c-20.749,-0 -37.594,16.845 -37.594,37.593l0,0.004c0,20.748 16.845,37.593 37.594,37.593l0.003,0c20.748,0 37.593,-16.845 37.593,-37.593l0,-0.004Z"></path><circle cx="87.153" cy="50.452" r="23.247" style="fill:#7888ff;"></circle></g></g></svg>`;
-  bind_props($$props, { className });
-}
-function Footer($$payload) {
-  $$payload.out += `<footer class="bg-gray-900 text-white py-3"><div class="container mx-1 xs:mx-2 md:mx-auto flex flex-col md:flex-row items-start md:items-center justify-between text-xs"><div class="flex-1"><div class="flex justify-start"><div class="flex flex-row pl-4"><a href="https://oc.app/community/uf3iv-naaaa-aaaar-ar3ta-cai/?ref=zv6hh-xaaaa-aaaar-ac35q-cai" target="_blank" rel="noopener noreferrer"><img src="/openchat.png" class="h-4 w-auto mb-2 mr-2" alt="OpenChat"></a> <a href="https://x.com/OpenFPL_DAO" target="_blank" rel="noopener noreferrer"><img src="/twitter.png" class="h-4 w-auto mr-2 mb-2" alt="X"></a> <a href="https://github.com/jamesbeadle/OpenWSL" target="_blank" rel="noopener noreferrer"><img src="/github.png" class="h-4 w-auto mb-2" alt="GitHub"></a></div></div> <div class="flex justify-start"><div class="flex flex-col md:flex-row md:space-x-2 pl-4"><a href="/gameplay-rules" class="hover:text-gray-300 md:hidden lg:block">Gameplay Rules</a> <a href="/gameplay-rules" class="hover:text-gray-300 hidden md:block lg:hidden">Rules</a> <span class="hidden md:flex">|</span> <a href="/terms" class="hover:text-gray-300">Terms &amp; Conditions</a></div></div></div> <div class="flex-0"><a href="/"><b class="px-4 mt-2 md:mt-0 md:px-10 flex items-center">`;
-  OpenFPLIcon($$payload, { className: "h-6 w-auto mr-2" });
-  $$payload.out += `<!---->OpenWSL</b></a></div> <div class="flex-1"><div class="flex justify-end"><div class="text-right px-4 md:px-0 mt-1 md:mt-0 md:mr-4"><a href="https://juno.build" target="_blank" class="hover:text-gray-300 flex items-center">Sponsored By juno.build `;
-  JunoIcon($$payload, { className: "h-8 w-auto ml-2" });
-  $$payload.out += `<!----></a></div></div></div></div></footer>`;
-}
-function Local_spinner($$payload) {
-  $$payload.out += `<div class="local-spinner svelte-pvdm52"></div>`;
-}
-function Layout($$payload, $$props) {
-  push();
-  var $$store_subs;
-  const init2 = async () => await Promise.all([syncAuthStore()]);
-  const syncAuthStore = async () => {
-    {
+derived(
+  authStore,
+  ({ identity }) => identity !== null && identity !== void 0
+);
+var define_process_env_default$2 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
+function createUserStore() {
+  const { subscribe, set: set2 } = writable(null);
+  async function sync() {
+    let localStorageString = localStorage.getItem("user_profile_data");
+    if (localStorageString) {
+      const localProfile = JSON.parse(localStorageString);
+      set2(localProfile);
       return;
     }
-  };
-  store_get($$store_subs ??= {}, "$authStore", authStore);
-  $$payload.out += `<!---->`;
-  await_block(
-    init2(),
-    () => {
-      $$payload.out += `<div>`;
-      Local_spinner($$payload);
-      $$payload.out += `<!----></div>`;
-    },
-    (_) => {
-      $$payload.out += `<div class="flex flex-col h-screen justify-between default-text">`;
-      Header($$payload);
-      $$payload.out += `<!----> <main class="page-wrapper svelte-cbh2q9"><!---->`;
-      slot($$payload, $$props, "default", {});
-      $$payload.out += `<!----></main> `;
-      Footer($$payload);
-      $$payload.out += `<!----></div>`;
+    try {
+      await cacheProfile();
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      throw error;
     }
-  );
-  $$payload.out += `<!---->`;
-  if ($$store_subs) unsubscribe_stores($$store_subs);
-  pop();
+  }
+  async function updateUsername(username) {
+    try {
+      const identityActor = await ActorFactory.createIdentityActor(
+        authStore,
+        define_process_env_default$2.OPENWSL_BACKEND_CANISTER_ID ?? ""
+      );
+      let dto = {
+        username
+      };
+      const result = await identityActor.updateUsername(dto);
+      if (isError(result)) {
+        console.error("Error updating username");
+        return;
+      }
+      await cacheProfile();
+      return result;
+    } catch (error) {
+      console.error("Error updating username:", error);
+      throw error;
+    }
+  }
+  async function updateFavouriteTeam(favouriteTeamId) {
+    try {
+      const identityActor = await ActorFactory.createIdentityActor(
+        authStore,
+        define_process_env_default$2.OPENWSL_BACKEND_CANISTER_ID ?? ""
+      );
+      let dto = {
+        favouriteClubId: favouriteTeamId
+      };
+      const result = await identityActor.updateFavouriteClub(dto);
+      if (isError(result)) {
+        console.error("Error updating favourite team");
+        return;
+      }
+      await cacheProfile();
+      return result;
+    } catch (error) {
+      console.error("Error updating favourite team:", error);
+      throw error;
+    }
+  }
+  async function updateProfilePicture(picture) {
+    try {
+      const maxPictureSize = 1e3;
+      const extension = getFileExtensionFromFile(picture);
+      if (picture.size > maxPictureSize * 1024) {
+        return null;
+      }
+      const reader = new FileReader();
+      reader.readAsArrayBuffer(picture);
+      reader.onloadend = async () => {
+        const arrayBuffer = reader.result;
+        const uint8Array = new Uint8Array(arrayBuffer);
+        try {
+          const identityActor = await ActorFactory.createIdentityActor(
+            authStore,
+            define_process_env_default$2.OPENWSL_BACKEND_CANISTER_ID ?? ""
+          );
+          let dto = {
+            profilePicture: uint8Array,
+            extension
+          };
+          const result = await identityActor.updateProfilePicture(dto);
+          if (isError(result)) {
+            console.error("Error updating profile picture");
+            return;
+          }
+          await cacheProfile();
+          return result;
+        } catch (error) {
+          console.error(error);
+        }
+      };
+    } catch (error) {
+      console.error("Error updating username:", error);
+      throw error;
+    }
+  }
+  function getFileExtensionFromFile(file) {
+    const filename = file.name;
+    const lastIndex = filename.lastIndexOf(".");
+    return lastIndex !== -1 ? filename.substring(lastIndex + 1) : "";
+  }
+  async function isUsernameAvailable(username) {
+    const identityActor = await ActorFactory.createIdentityActor(
+      authStore,
+      define_process_env_default$2.OPENWSL_BACKEND_CANISTER_ID
+    );
+    let dto = {
+      username
+    };
+    return await identityActor.isUsernameValid(dto);
+  }
+  async function cacheProfile() {
+    const identityActor = await ActorFactory.createIdentityActor(
+      authStore,
+      define_process_env_default$2.OPENWSL_BACKEND_CANISTER_ID
+    );
+    let getProfileResponse = await identityActor.getProfile();
+    let error = isError(getProfileResponse);
+    if (error) {
+      console.error("Error fetching user profile");
+      return;
+    }
+    let profileData = getProfileResponse.ok;
+    set2(profileData);
+  }
+  async function withdrawFPL(withdrawalAddress, withdrawalAmount) {
+    try {
+      let identity;
+      authStore.subscribe(async (auth) => {
+        identity = auth.identity;
+      });
+      if (!identity) {
+        return;
+      }
+      let principalId = identity.getPrincipal();
+      const agent = await createAgent({
+        identity,
+        host: void 0,
+        fetchRootKey: define_process_env_default$2.DFX_NETWORK === "local"
+      });
+      const { transfer } = IcrcLedgerCanister.create({
+        agent,
+        canisterId: define_process_env_default$2.DFX_NETWORK === "ic" ? Principal.fromText("ddsp7-7iaaa-aaaaq-aacqq-cai") : Principal.fromText("avqkn-guaaa-aaaaa-qaaea-cai")
+      });
+      if (principalId) {
+        try {
+          let transfer_result = await transfer({
+            to: {
+              owner: Principal.fromText(withdrawalAddress),
+              subaccount: []
+            },
+            fee: 100000n,
+            memo: new Uint8Array(Text$1.encodeValue("0")),
+            from_subaccount: void 0,
+            created_at_time: BigInt(Date.now()) * BigInt(1e6),
+            amount: withdrawalAmount - 100000n
+          });
+        } catch (err) {
+          console.error(err.errorType);
+        }
+      }
+    } catch (error) {
+      console.error("Error withdrawing FPL.", error);
+      throw error;
+    }
+  }
+  async function getFPLBalance() {
+    let identity;
+    authStore.subscribe(async (auth) => {
+      identity = auth.identity;
+    });
+    if (!identity) {
+      return 0n;
+    }
+    let principalId = identity.getPrincipal();
+    const agent = await createAgent({
+      identity,
+      host: void 0,
+      fetchRootKey: define_process_env_default$2.DFX_NETWORK === "local"
+    });
+    const { balance } = IcrcLedgerCanister.create({
+      agent,
+      canisterId: Principal.fromText("ddsp7-7iaaa-aaaaq-aacqq-cai")
+    });
+    if (principalId) {
+      try {
+        let result = await balance({
+          owner: principalId,
+          certified: false
+        });
+        return result;
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    return 0n;
+  }
+  return {
+    subscribe,
+    sync,
+    updateUsername,
+    updateFavouriteTeam,
+    updateProfilePicture,
+    isUsernameAvailable,
+    cacheProfile,
+    withdrawFPL,
+    getFPLBalance
+  };
 }
-function BadgeIcon($$payload, $$props) {
-  let className = fallback($$props["className"], "");
-  let primaryColour = fallback($$props["primaryColour"], "");
-  let secondaryColour = fallback($$props["secondaryColour"], "");
-  let thirdColour = fallback($$props["thirdColour"], "");
-  $$payload.out += `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"${attr("class", className)} fill="currentColor" viewBox="0 0 814 814"><path d="M407 33.9165C295.984 33.9165 135.667 118.708 135.667 118.708V508.75C135.667 508.75 141.044 561.82 152.625 593.541C194.871 709.259 407 780.083 407 780.083C407 780.083 619.129 709.259 661.375 593.541C672.956 561.82 678.333 508.75 678.333 508.75V118.708C678.333 118.708 518.016 33.9165 407 33.9165Z"${attr("fill", primaryColour)}></path><path d="M712.25 101.75V493.013C712.25 649.097 603.581 689.831 407 814C210.419 689.831 101.75 649.063 101.75 493.013V101.75C167.718 45.2448 282.729 0 407 0C531.271 0 646.282 45.2448 712.25 101.75ZM644.417 135.361C585.775 96.052 496.506 67.8333 407.237 67.8333C317.223 67.8333 228.124 96.1198 169.583 135.361V492.979C169.583 595.712 225.817 622.235 407 734.025C587.979 622.337 644.417 595.814 644.417 492.979V135.361Z"${attr("fill", thirdColour)}></path><path d="M407.237 135.667C464.862 135.667 527.811 150.42 576.583 174.467V493.012C576.583 547.347 562.542 558.539 407 654.422L407.237 135.667Z"${attr("fill", secondaryColour)}></path></svg>`;
-  bind_props($$props, {
-    className,
-    primaryColour,
-    secondaryColour,
-    thirdColour
-  });
-}
+const userStore = createUserStore();
+derived(
+  userStore,
+  ($user) => {
+    try {
+      let byteArray;
+      if ($user && $user.profilePicture) {
+        if (Array.isArray($user.profilePicture) && $user.profilePicture[0] instanceof Uint8Array) {
+          byteArray = $user.profilePicture[0];
+          return `data:image/${$user.profilePictureType};base64,${uint8ArrayToBase64(byteArray)}`;
+        } else if ($user.profilePicture instanceof Uint8Array) {
+          return `data:${$user.profilePictureType};base64,${uint8ArrayToBase64(
+            $user.profilePicture
+          )}`;
+        } else {
+          if (typeof $user.profilePicture === "string") {
+            if ($user.profilePicture.startsWith("data:image")) {
+              return $user.profilePicture;
+            } else {
+              return `data:${$user.profilePictureType};base64,${$user.profilePicture}`;
+            }
+          }
+        }
+      }
+      return "/profile_placeholder.png";
+    } catch (error) {
+      console.error(error);
+      return "/profile_placeholder.png";
+    }
+  }
+);
+derived(
+  userStore,
+  (user) => user !== null && user !== void 0 ? user.favouriteTeamId : 0
+);
 var define_process_env_default$1 = { OPENWSL_BACKEND_CANISTER_ID: "5bafg-ayaaa-aaaal-qmzqq-cai", OPENWSL_FRONTEND_CANISTER_ID: "5ido2-wqaaa-aaaal-qmzra-cai", DFX_NETWORK: "ic", CANISTER_ID_SNS_GOVERNANCE: "detjl-sqaaa-aaaaq-aacqa-cai", CANISTER_ID_SNS_ROOT: "gyito-zyaaa-aaaaq-aacpq-cai", TOTAL_GAMEWEEKS: 22 };
 function createMonthlyLeaderboardStore() {
   const { subscribe, set: set2 } = writable(null);
@@ -7425,44 +7247,9 @@ function createSeasonLeaderboardStore() {
   };
 }
 createSeasonLeaderboardStore();
-function Relative_spinner($$payload) {
-  $$payload.out += `<div class="local-spinner svelte-1qjdn91"></div>`;
-}
 function _page$8($$payload, $$props) {
   push();
-  Layout($$payload, {
-    children: ($$payload2) => {
-      $$payload2.out += `<div class="flex page-header-wrapper">`;
-      {
-        $$payload2.out += "<!--[!-->";
-        $$payload2.out += `<div class="flex items-center justify-center content-panel lg:w-1/2">`;
-        Relative_spinner($$payload2);
-        $$payload2.out += `<!----></div>`;
-      }
-      $$payload2.out += `<!--]--> `;
-      {
-        $$payload2.out += "<!--[!-->";
-        $$payload2.out += `<div class="flex lg:hidden"><div class="flex items-center justify-center content-panel">`;
-        Relative_spinner($$payload2);
-        $$payload2.out += `<!----></div></div> <div class="hidden w-1/2 lg:flex"><div class="flex items-center justify-center content-panel">`;
-        Relative_spinner($$payload2);
-        $$payload2.out += `<!----></div></div>`;
-      }
-      $$payload2.out += `<!--]--></div> <div class="rounded-md bg-panel"><ul class="flex px-1 pt-2 mb-4 border-b border-gray-700 bg-light-gray md:px-4 contained-text"><li${attr("class", `mr-1 md:mr-4 ${"active-tab"}`)}><button${attr("class", `p-2 ${"text-white"}`)}>Fixtures</button></li> `;
-      {
-        $$payload2.out += "<!--[!-->";
-      }
-      $$payload2.out += `<!--]--> <li${attr("class", `mr-1 md:mr-4 ${""}`)}><button${attr("class", `p-2 ${"text-gray-400"}`)}>Leaderboards</button></li> <li${attr("class", `mr-1 md:mr-4 ${""}`)}><button${attr("class", `p-2 ${"text-gray-400"}`)}>Table</button></li></ul> `;
-      {
-        $$payload2.out += "<!--[!-->";
-        $$payload2.out += `<div class="flex items-center justify-center p-4">`;
-        Relative_spinner($$payload2);
-        $$payload2.out += `<!----></div>`;
-      }
-      $$payload2.out += `<!--]--></div>`;
-    },
-    $$slots: { default: true }
-  });
+  Layout($$payload);
   pop();
 }
 function _page$7($$payload, $$props) {
@@ -7474,104 +7261,30 @@ function _page$7($$payload, $$props) {
   if (fixturesWithTeams.length > 0 && store_get($$store_subs ??= {}, "$clubStore", clubStore).length > 0) {
     updateTableData(fixturesWithTeams, store_get($$store_subs ??= {}, "$clubStore", clubStore), selectedGameweek);
   }
-  Layout($$payload, {
-    children: ($$payload2) => {
-      {
-        $$payload2.out += "<!--[-->";
-        Local_spinner($$payload2);
-      }
-      $$payload2.out += `<!--]-->`;
-    },
-    $$slots: { default: true }
-  });
+  Layout($$payload);
   if ($$store_subs) unsubscribe_stores($$store_subs);
   pop();
 }
 function _page$6($$payload, $$props) {
   push();
-  var $$store_subs;
-  Layout($$payload, {
-    children: ($$payload2) => {
-      const each_array = ensure_array_like(store_get($$store_subs ??= {}, "$clubStore", clubStore).sort((a, b) => a.id - b.id));
-      $$payload2.out += `<div class="page-header-wrapper flex w-full"><div class="content-panel w-full"><div class="w-full grid grid-cols-1 md:grid-cols-4 gap-4 mt-4"><p class="col-span-1 md:col-span-4 text-center w-full mb-4">Super League Clubs</p> <!--[-->`;
-      for (let $$index = 0, $$length = each_array.length; $$index < $$length; $$index++) {
-        let team = each_array[$$index];
-        $$payload2.out += `<div class="flex flex-col items-center bg-gray-700 rounded shadow p-4 w-full"><div class="flex items-center space-x-4 w-full">`;
-        BadgeIcon($$payload2, {
-          primaryColour: team.primaryColourHex,
-          secondaryColour: team.secondaryColourHex,
-          thirdColour: team.thirdColourHex,
-          className: "w-8"
-        });
-        $$payload2.out += `<!----> <p class="flex-grow text-lg md:text-sm">${escape_html(team.friendlyName)}</p> <a class="mt-auto self-end"${attr("href", `/club?id=${team.id}`)}><button class="fpl-button text-white font-bold py-2 px-4 rounded self-end">View</button></a></div></div>`;
-      }
-      $$payload2.out += `<!--]--></div></div></div>`;
-    },
-    $$slots: { default: true }
-  });
-  if ($$store_subs) unsubscribe_stores($$store_subs);
+  Layout($$payload);
   pop();
 }
 function _page$5($$payload) {
-  Layout($$payload, {
-    children: ($$payload2) => {
-      $$payload2.out += `<div class="bg-panel rounded-md p-4 mt-4"><h1 class="default-header">OpenWSL Gameplay Rules</h1> <div><p class="my-2">Please see the below OpenWSL fantasy football gameplay rules.</p> <p class="my-2">Each user begins with £300m to purchase players for their team. The
-        value of a player can go up or down depending on how the player is rated
-        in the DAO. Provided a certain voting threshold is reached for either a
-        £0.25m increase or decrease, the player's value will change in that
-        gameweek. A players value can only change when the season is active 
-        (the first game has kicked off and the final game has not finished).</p> <p class="my-2">Each team has 11 players, with no more than 2 selected from any single
-        team. The team must be in a valid formation, with 1 goalkeeper, 3-5
-        defenders, 3-5 midfielders and 1-3 strikers.</p> <p class="my-2">Users will setup their team before the gameweek deadline each week. When
-        playing OpenWSL, users have the chance to win FPL tokens depending on
-        how well the players in their team perform.</p> <p class="my-2">In January, a user can change their entire team once.</p> <p class="my-2">A user is allowed to make 3 transfers per week which are never carried
-        over.</p> <p class="my-2">Each week a user can select a star player. This player will receive
-        double points for the gameweek. If one is not set by the start of the
-        gameweek it will automatically be set to the most valuable player in
-        your team.</p> <h2 class="default-sub-header">Points</h2> <p class="my-2">The user can get the following points during a gameweek for their team:</p> <table class="w-full border-collapse striped mb-8 mt-4 svelte-a09ql9"><thead><tr class="svelte-a09ql9"><th class="text-left px-4 py-2">For</th><th class="text-left">Points</th></tr></thead><tbody><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">Appearing in the game.</td><td>5</td></tr><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">Every 3 saves a goalkeeper makes.</td><td>5</td></tr><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">Goalkeeper or defender cleansheet.</td><td>10</td></tr><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">Forward scores a goal.</td><td>10</td></tr><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">Midfielder or Forward assists a goal.</td><td>10</td></tr><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">Midfielder scores a goal.</td><td>15</td></tr><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">Goalkeeper or defender assists a goal.</td><td>15</td></tr><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">Goalkeeper or defender scores a goal.</td><td>20</td></tr><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">Goalkeeper saves a penalty.</td><td>20</td></tr><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">Player is highest scoring player in match.</td><td>25</td></tr><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">Player receives a red card.</td><td>-20</td></tr><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">Player misses a penalty.</td><td>-15</td></tr><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">Each time a goalkeeper or defender concedes 2 goals.</td><td>-15</td></tr><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">A player scores an own goal.</td><td>-10</td></tr><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">A player receives a yellow card.</td><td>-5</td></tr></tbody></table> <h2 class="default-sub-header">Bonuses</h2> <p class="my-2">A user can play 1 bonus per gameweek. Each season a user starts with the
-        following 8 bonuses:</p> <table class="w-full border-collapse striped mb-8 mt-4 svelte-a09ql9"><thead><tr class="svelte-a09ql9"><th class="text-left px-4 py-2">Bonus</th><th class="text-left">Description</th></tr></thead><tbody><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">Goal Getter</td><td>Select a player you think will score in a game to receive a X3
-            mulitplier for each goal scored.</td></tr><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">Pass Master</td><td>Select a player you think will assist in a game to receive a X3
-            mulitplier for each assist.</td></tr><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">No Entry</td><td>Select a goalkeeper or defender you think will keep a clean sheet
-            to receive a X3 multipler on their total score.</td></tr><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">Team Boost</td><td>Receive a X2 multiplier from all players from a single club that
-            are in your team.</td></tr><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">Safe Hands</td><td>Receive a X3 multiplier on your goalkeeper if they make 5 saves in
-            a match.</td></tr><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">Captain Fantastic</td><td>Receive a X2 multiplier on your team captain's score if they score
-            a goal in a match.</td></tr><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">One Nation</td><td>Receive a X2 multiplier for players of a selected nationality.</td></tr><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">Prospects</td><td>Receive a X2 multiplier for players under the age of 21.</td></tr><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">Brace Bonus</td><td>Receive a X2 multiplier on a player's score if they score 2 or more
-            goals in a game. Applies to every player who scores a brace.</td></tr><tr class="svelte-a09ql9"><td class="text-left px-4 py-2">Hat Trick Hero</td><td>Receive a X3 multiplier on a player's score if they score 3 or more
-            goals in a game. Applies to every player who scores a hat-trick.</td></tr></tbody></table></div></div>`;
-    },
-    $$slots: { default: true }
-  });
+  Layout($$payload);
 }
 function _page$4($$payload, $$props) {
   push();
   var $$store_subs;
   writable(Number(store_get($$store_subs ??= {}, "$page", page).url.searchParams.get("gw")) ?? 1);
   store_get($$store_subs ??= {}, "$page", page).url.searchParams.get("id");
-  Layout($$payload, {
-    children: ($$payload2) => {
-      {
-        $$payload2.out += "<!--[-->";
-        Local_spinner($$payload2);
-      }
-      $$payload2.out += `<!--]-->`;
-    },
-    $$slots: { default: true }
-  });
+  Layout($$payload);
   if ($$store_subs) unsubscribe_stores($$store_subs);
   pop();
 }
 function _page$3($$payload, $$props) {
   push();
-  Layout($$payload, {
-    children: ($$payload2) => {
-      {
-        $$payload2.out += "<!--[-->";
-        Local_spinner($$payload2);
-      }
-      $$payload2.out += `<!--]-->`;
-    },
-    $$slots: { default: true }
-  });
+  Layout($$payload);
   pop();
 }
 function _page$2($$payload, $$props) {
@@ -7583,50 +7296,17 @@ function _page$2($$payload, $$props) {
   if (store_get($$store_subs ??= {}, "$fixtureStore", fixtureStore).length > 0 && store_get($$store_subs ??= {}, "$clubStore", clubStore).length > 0) {
     updateTableData(fixturesWithTeams, store_get($$store_subs ??= {}, "$clubStore", clubStore), selectedGameweek);
   }
-  Layout($$payload, {
-    children: ($$payload2) => {
-      {
-        $$payload2.out += "<!--[-->";
-        Local_spinner($$payload2);
-      }
-      $$payload2.out += `<!--]-->`;
-    },
-    $$slots: { default: true }
-  });
+  Layout($$payload);
   if ($$store_subs) unsubscribe_stores($$store_subs);
   pop();
 }
 function _page$1($$payload, $$props) {
   push();
-  Layout($$payload, {
-    children: ($$payload2) => {
-      {
-        $$payload2.out += "<!--[-->";
-        Local_spinner($$payload2);
-      }
-      $$payload2.out += `<!--]-->`;
-    },
-    $$slots: { default: true }
-  });
+  Layout($$payload);
   pop();
 }
 function _page($$payload) {
-  Layout($$payload, {
-    children: ($$payload2) => {
-      $$payload2.out += `<div class="bg-panel rounded-md p-4 mt-4"><h1 class="default-header">OpenWSL DAO Terms &amp; Conditions</h1> <div><p class="my-2 text-xs">Last Updated: 13th October 2023</p> <p class="my-4">By accessing the OpenWSL website ("Site") and participating in the
-        OpenFPL Fantasy Football DAO ("Service"), you agree to comply with and
-        be bound by the following Terms and Conditions.</p> <h2 class="default-sub-header">Acceptance of Terms</h2> <p class="my-4">You acknowledge that you have read, understood, and agree to be bound by
-        these Terms. These Terms are subject to change by a DAO proposal and
-        vote.</p> <h2 class="default-sub-header">Decentralised Structure</h2> <p class="my-4">OpenFPL operates as a decentralised autonomous organisation (DAO). As
-        such, traditional legal and liability structures may not apply. Members
-        and users are responsible for their own actions within the DAO
-        framework.</p> <h2 class="default-sub-header">Eligibility</h2> <p class="my-4">The Service is open to users of all ages.</p> <h2 class="default-sub-header">User Conduct</h2> <p class="my-4">No Automation or Bots: You agree not to use bots, automated methods, or
-        other non-human ways of interacting with the site.</p> <h2 class="default-sub-header">Username Policy</h2> <p class="my-4">You agree not to use usernames that are offensive, vulgar, or infringe
-        on the rights of others.</p> <h2 class="default-sub-header">Changes to Terms</h2> <p class="my-4">These Terms and Conditions are subject to change. Amendments will be
-        effective upon DAO members' approval via proposal and vote.</p></div></div>`;
-    },
-    $$slots: { default: true }
-  });
+  Layout($$payload);
 }
 export {
   Error$1 as E,

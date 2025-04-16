@@ -1,3 +1,10 @@
+<div class="flex flex-col h-screen justify-between default-text">
+  <main class="page-wrapper">
+    <h1>OpenWSL</h1>
+    <p class="mt-4">OpenWSL is coming soon.</p>
+  </main>
+</div>
+<!--
 <script lang="ts">
   import { onMount } from "svelte";
   import { fade } from "svelte/transition";
@@ -75,3 +82,4 @@
     flex-direction: column;
   }
 </style>
+-->

@@ -28,8 +28,8 @@
 declare module '$env/static/private' {
 	export const DFX_VERSION: string;
 	export const DFX_NETWORK: string;
-	export const CANISTER_ID_OPENWSL_FRONTEND: string;
 	export const CANISTER_ID_OPENWSL_BACKEND: string;
+	export const CANISTER_ID_OPENWSL_FRONTEND: string;
 	export const CANISTER_ID: string;
 	export const CANISTER_CANDID_PATH: string;
 	export const TERM_PROGRAM: string;
@@ -52,6 +52,7 @@ declare module '$env/static/private' {
 	export const npm_config_globalconfig: string;
 	export const SSH_AUTH_SOCK: string;
 	export const __CF_USER_TEXT_ENCODING: string;
+	export const VSCODE_PROFILE_INITIALIZED: string;
 	export const npm_execpath: string;
 	export const PATH: string;
 	export const CANISTER_CANDID_PATH_OPENWSL_BACKEND: string;
@@ -126,8 +127,8 @@ declare module '$env/dynamic/private' {
 	export const env: {
 		DFX_VERSION: string;
 		DFX_NETWORK: string;
-		CANISTER_ID_OPENWSL_FRONTEND: string;
 		CANISTER_ID_OPENWSL_BACKEND: string;
+		CANISTER_ID_OPENWSL_FRONTEND: string;
 		CANISTER_ID: string;
 		CANISTER_CANDID_PATH: string;
 		TERM_PROGRAM: string;
@@ -150,6 +151,7 @@ declare module '$env/dynamic/private' {
 		npm_config_globalconfig: string;
 		SSH_AUTH_SOCK: string;
 		__CF_USER_TEXT_ENCODING: string;
+		VSCODE_PROFILE_INITIALIZED: string;
 		npm_execpath: string;
 		PATH: string;
 		CANISTER_CANDID_PATH_OPENWSL_BACKEND: string;
